@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IsaacsPOS — The Intelligent POS for Modern Business</title>
-    <meta name="description" content="IsaacsPOS - All-in-one POS, CRM, Booking, Inventory, and WhatsApp integration for salons.">
+    <meta name="description" content="IsaacsPOS - All-in-one POS, CRM, Booking, Inventory, and WhatsApp integration for salons. Built in South Africa.">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +13,7 @@
     <!-- Three.js & Controls -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
-    <!-- GSAP for animations -->
+    <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <!-- Lucide Icons -->
@@ -41,7 +41,7 @@
     <style>
         :root {
             --emerald-glow: rgba(16, 185, 129, 0.4);
-            --accent-glow: rgba(99, 102, 241, 0.4);
+            --emerald-strong: #10b981;
         }
 
         body {
@@ -52,276 +52,414 @@
         }
 
         .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card {
             background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        .glass-hover:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(16, 185, 129, 0.3);
-            transform: translateY(-4px);
-        }
-
-        .text-glow {
-            text-shadow: 0 0 15px var(--emerald-glow);
+        .glass-card:hover {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.4);
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.1);
         }
 
         .gradient-text {
-            background: linear-gradient(135deg, #fff 0%, #10b981 100%);
+            background: linear-gradient(135deg, #fff 30%, #10b981 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         #hero-canvas {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+            opacity: 0.7;
         }
 
         #showcase-canvas {
             width: 100%;
-            height: 600px;
+            height: 700px;
             display: block;
-            border-radius: 3rem;
+            cursor: grab;
         }
 
-        .scroll-indicator {
-            animation: bounce 2s infinite;
+        #showcase-canvas:active { cursor: grabbing; }
+
+        .image-glow {
+            filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.2));
         }
 
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-10px);}
-            60% {transform: translateY(-5px);}
+        .floating {
+            animation: float 6s ease-in-out infinite;
         }
 
-        ::-webkit-scrollbar { width: 6px; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #10b981; }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
 
-        .feature-card {
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .btn-primary {
+            background: var(--emerald-strong);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+            transform: scale(1.05);
         }
 
-        input, textarea {
-            background: rgba(255,255,255,0.03) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            color: white !important;
-        }
-        input:focus, textarea:focus {
-            border-color: #10b981 !important;
-            outline: none !important;
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+        #notification-host {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-emerald-500 selection:text-black">
+
+    <div id="notification-host"></div>
 
     <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-brand-black/50 backdrop-blur-md border-b border-brand-border">
-        <div class="flex items-center gap-2 group cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
-            <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-emerald-900/20">
-                <span class="text-xl font-black italic">I</span>
+    <nav class="fixed top-0 w-full z-[100] px-8 py-5 flex justify-between items-center glass border-b border-white/5">
+        <div class="flex items-center gap-3 group cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <div class="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-emerald-500/20">
+                <span class="text-2xl font-black italic text-white">I</span>
             </div>
-            <span class="text-xl font-bold tracking-tighter uppercase">IsaacsPOS <span class="text-emerald-500 font-normal">v2</span></span>
+            <div class="flex flex-col">
+                <span class="text-xl font-black tracking-tighter uppercase leading-none">IsaacsPOS</span>
+                <span class="text-[10px] font-bold text-emerald-500 tracking-[0.3em] uppercase">Enterprise v2.1</span>
+            </div>
         </div>
-        <div class="hidden md:flex gap-8 text-[10px] font-bold uppercase tracking-widest text-white/60">
-            <a href="#workflow" class="hover:text-emerald-400 transition-colors">How it works</a>
-            <a href="#screens" class="hover:text-emerald-400 transition-colors">Showcase</a>
-            <a href="#features" class="hover:text-emerald-400 transition-colors">Features</a>
-            <a href="#download" class="hover:text-emerald-400 transition-colors">Download</a>
-            <a href="#contact" class="hover:text-emerald-400 transition-colors">Contact</a>
+        <div class="hidden lg:flex gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
+            <a href="#about" class="hover:text-emerald-400 transition-colors">Philosophy</a>
+            <a href="#showcase" class="hover:text-emerald-400 transition-colors">3D Showcase</a>
+            <a href="#capabilities" class="hover:text-emerald-400 transition-colors">Modules</a>
+            <a href="#download" class="hover:text-emerald-400 transition-colors">Get Started</a>
         </div>
-        <div class="flex items-center gap-4">
-            <a href="#download" class="hidden sm:block text-[10px] font-black uppercase text-white/40 hover:text-white transition-colors">v2.1 Stable</a>
-            <a href="#contact" class="px-6 py-2 bg-white text-brand-black rounded-full font-bold text-xs uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-xl">
-                Demo Token
+        <div class="flex items-center gap-6">
+            <a href="#contact" class="hidden sm:block text-[10px] font-black uppercase text-white/60 hover:text-white transition-colors tracking-widest">Support</a>
+            <a href="#contact" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-xl active:scale-95">
+                Book a Demo
             </a>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-        <div id="hero-canvas-container" class="absolute inset-0">
-            <canvas id="hero-canvas"></canvas>
-        </div>
+        <canvas id="hero-canvas"></canvas>
         
         <div class="container mx-auto px-6 relative z-10 text-center">
-            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-emerald-500/20 text-[10px] font-black tracking-widest text-emerald-400 uppercase mb-8 animate-pulse">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Next-Gen Enterprise Standard
+            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full glass border-emerald-500/30 text-[10px] font-black tracking-[0.3em] text-emerald-400 uppercase mb-10 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></span>
+                Built in South Africa for the World
             </div>
             
-            <h1 class="text-5xl md:text-8xl font-black tracking-tighter mb-6 leading-none">
-                IsaacsPOS – The Intelligent POS <br/>
-                <span class="gradient-text">Built for Modern Business</span>
+            <h1 class="text-6xl md:text-9xl font-black tracking-tighter mb-8 leading-[0.9]">
+                The Intelligent POS <br/>
+                <span class="gradient-text">For Modern Business</span>
             </h1>
             
-            <p class="text-lg md:text-2xl text-white/60 max-w-3xl mx-auto font-light leading-relaxed mb-12">
-                Offline-First. Secure. Smart. Built for Scale. <br/>
-                Experience the power of local-first enterprise software designed for global reliability.
+            <p class="text-lg md:text-2xl text-white/40 max-w-4xl mx-auto font-medium leading-relaxed mb-16 px-4">
+                Offline-First. Secure. Smart. <br class="hidden md:block" />
+                A professional ecosystem featuring technical color registries, WhatsApp automation, and SARS compliance built for global scale.
             </p>
             
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <a href="#contact" class="px-10 py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all transform hover:scale-105 shadow-2xl shadow-emerald-500/20">
-                    Request a Demo
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-8">
+                <a href="#contact" class="px-12 py-6 btn-primary text-black rounded-2xl font-black uppercase text-xs tracking-[0.2em]">
+                    Book Demo Slot
                 </a>
-                <a href="#download" class="px-10 py-5 glass border-white/10 hover:bg-white/10 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all transform hover:scale-105">
-                    Download Installer
+                <a href="#download" class="px-12 py-6 glass border-white/10 hover:bg-white/5 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3">
+                    <i data-lucide="download" class="w-4 h-4 text-emerald-500"></i> Download Stable
                 </a>
             </div>
         </div>
 
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 scroll-indicator">
-            <i data-lucide="chevron-down" class="text-white/20 w-8 h-8"></i>
+        <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-30">
+            <span class="text-[9px] font-black uppercase tracking-[0.4em]">Scroll to explore</span>
+            <div class="w-px h-12 bg-gradient-to-b from-emerald-500 to-transparent"></div>
         </div>
     </section>
 
-    <!-- How IsaacsPOS Works (Workflow) -->
-    <section id="workflow" class="py-32 relative bg-brand-dark overflow-hidden">
-        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-600/5 blur-[150px] rounded-full translate-x-1/2 -translate-y-1/2"></div>
-        
+    <!-- Local First Philosophy -->
+    <section id="about" class="py-32 relative bg-brand-dark border-y border-white/5">
         <div class="container mx-auto px-6">
-            <div class="text-center mb-20">
-                <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Operational <span class="text-emerald-500">Workflow</span></h2>
-                <div class="w-24 h-1.5 bg-emerald-500 mx-auto rounded-full mb-8"></div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="glass p-10 rounded-[3rem] space-y-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-                    <span class="absolute -top-4 -right-4 text-9xl font-black text-white/[0.02] group-hover:text-emerald-500/5 transition-colors">01</span>
-                    <div class="w-14 h-14 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-emerald-500"><i data-lucide="user-check"></i></div>
-                    <h3 class="text-xl font-black uppercase tracking-tight">Client Entry</h3>
-                    <p class="text-sm text-white/50 leading-relaxed">Uses Self Service Kiosk, checking previous folios, color history, loyalty points, and wallet. Selects service and stylist.</p>
+            <div class="grid lg:grid-cols-2 gap-24 items-center">
+                <div class="space-y-10">
+                    <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">Architecture</span>
+                    <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none">
+                        Local-First <br/><span class="text-emerald-500 text-glow">Sovereignty.</span>
+                    </h2>
+                    <p class="text-xl text-white/50 leading-relaxed font-medium">
+                        Your business shouldn't stop when the internet does. IsaacsPOS operates on a 
+                        <strong class="text-white">"SQLite Master Node"</strong> architecture. 
+                        Records live on your hardware—ensuring 100% uptime and total data ownership.
+                    </p>
+                    
+                    <div class="grid sm:grid-cols-2 gap-8 pt-6">
+                        <div class="space-y-4">
+                            <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                <i data-lucide="wifi-off"></i>
+                            </div>
+                            <h4 class="font-black uppercase text-xs tracking-widest text-white">Full Offline Logic</h4>
+                            <p class="text-sm text-white/40 leading-relaxed font-medium">Transactions continue seamlessly during internet outages. Data syncs when you're ready.</p>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                <i data-lucide="database"></i>
+                            </div>
+                            <h4 class="font-black uppercase text-xs tracking-widest text-white">Encrypted Vault</h4>
+                            <p class="text-sm text-white/40 leading-relaxed font-medium">Enterprise data ownership. You control your database files with simple USB backup protocols.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="glass p-10 rounded-[3rem] space-y-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-                    <span class="absolute -top-4 -right-4 text-9xl font-black text-white/[0.02] group-hover:text-emerald-500/5 transition-colors">02</span>
-                    <div class="w-14 h-14 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-emerald-500"><i data-lucide="layers"></i></div>
-                    <h3 class="text-xl font-black uppercase tracking-tight">Service Prep</h3>
-                    <p class="text-sm text-white/50 leading-relaxed">Add additional treatments, retail, vouchers, or coupons. Staff gratuity and VAT calculated automatically in real time.</p>
-                </div>
-                <div class="glass p-10 rounded-[3rem] space-y-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-                    <span class="absolute -top-4 -right-4 text-9xl font-black text-white/[0.02] group-hover:text-emerald-500/5 transition-colors">03</span>
-                    <div class="w-14 h-14 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-emerald-500"><i data-lucide="banknote"></i></div>
-                    <h3 class="text-xl font-black uppercase tracking-tight">Settlement</h3>
-                    <p class="text-sm text-white/50 leading-relaxed">Accept cash, card, or wallet. Instantly generate SARS-compliant PDF receipts, sent via WhatsApp & saved locally.</p>
-                </div>
-                <div class="glass p-10 rounded-[3rem] space-y-6 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
-                    <span class="absolute -top-4 -right-4 text-9xl font-black text-white/[0.02] group-hover:text-emerald-500/5 transition-colors">04</span>
-                    <div class="w-14 h-14 bg-emerald-600/20 rounded-2xl flex items-center justify-center text-emerald-500"><i data-lucide="shield-alert"></i></div>
-                    <h3 class="text-xl font-black uppercase tracking-tight">Audit Close</h3>
-                    <p class="text-sm text-white/50 leading-relaxed">Close the day with blind cash-up, Z-Reports, and immutable transaction logs. Data never leaves your machine.</p>
+                
+                <div class="relative group">
+                    <div class="absolute inset-0 bg-emerald-500/10 blur-[100px] rounded-full group-hover:bg-emerald-500/20 transition-all duration-1000"></div>
+                    <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Landscape.png" alt="Software Overview" class="relative z-10 rounded-[3rem] border border-white/10 shadow-2xl image-glow floating">
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 3D Showcase Section (Screenshots) -->
-    <section id="screens" class="py-32 bg-brand-black">
-        <div class="container mx-auto px-6 text-center mb-16">
-            <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">3D Software <span class="text-emerald-500">Showcase</span></h2>
-            <p class="text-white/40 font-bold uppercase tracking-widest text-xs">Interact with the IsaacsPOS Interface Gallery</p>
+    <!-- 3D Carousel Showcase -->
+    <section id="showcase" class="py-32 bg-brand-black overflow-hidden">
+        <div class="container mx-auto px-6 text-center mb-20">
+            <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4">Interactive <span class="text-emerald-500 text-glow">Gallery</span></h2>
+            <p class="text-white/30 font-black uppercase tracking-[0.4em] text-[10px]">Interact with real high-resolution IsaacsPOS interfaces</p>
         </div>
 
-        <div class="container mx-auto px-6 relative">
-            <div class="glass p-4 rounded-[4rem] border-white/5 shadow-2xl relative">
+        <div class="relative max-w-7xl mx-auto">
+            <div class="glass p-4 rounded-[4rem] border-white/5 relative overflow-hidden group">
                 <canvas id="showcase-canvas"></canvas>
-                <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 pointer-events-none">
-                    <div class="px-4 py-2 bg-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg animate-pulse">Drag to Rotate</div>
-                    <div class="px-4 py-2 glass rounded-full text-[10px] font-black uppercase tracking-widest text-white shadow-lg">Scroll to Zoom</div>
+                
+                <!-- Legend -->
+                <div class="absolute top-10 left-10 p-6 glass rounded-3xl border-emerald-500/20 z-20 pointer-events-none">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-50 animate-ping"></div>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Live Viewport</span>
+                    </div>
+                    <p id="carousel-label" class="text-lg font-black uppercase tracking-tighter">Initializing Hub...</p>
+                </div>
+
+                <!-- Controls Help -->
+                <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-4 z-20">
+                    <div class="px-6 py-3 glass rounded-full text-[9px] font-black uppercase tracking-[0.3em] flex items-center gap-3">
+                        <i data-lucide="mouse-pointer-2" class="w-3 h-3 text-emerald-500"></i> Drag to Rotate
+                    </div>
+                    <div class="px-6 py-3 glass rounded-full text-[9px] font-black uppercase tracking-[0.3em] flex items-center gap-3">
+                        <i data-lucide="zoom-in" class="w-3 h-3 text-emerald-500"></i> Scroll to Zoom
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Core Features Grid -->
-    <section id="features" class="py-32 bg-brand-dark">
+    <!-- Featured Capabilities -->
+    <section id="capabilities" class="py-32 bg-brand-dark">
         <div class="container mx-auto px-6">
-            <div class="text-center mb-24">
-                <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Master Capability Registry</h2>
-                <div class="w-24 h-1.5 bg-emerald-500 mx-auto rounded-full mb-8"></div>
-                <p class="text-white/40 font-bold uppercase tracking-[0.3em] text-xs">Omni-Channel Operations • AI Integrated</p>
+            
+            <!-- Group 1: Operations -->
+            <div class="mb-32">
+                <div class="flex items-end justify-between mb-16 border-b border-white/5 pb-8">
+                    <div>
+                        <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">Module Group 01</span>
+                        <h3 class="text-4xl md:text-5xl font-black uppercase tracking-tighter mt-2">Core Operations</h3>
+                    </div>
+                    <p class="text-white/20 text-xs font-bold hidden md:block">Sales • Queue • Agenda</p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Sales Screen.png" class="rounded-2xl border border-white/5 mb-6" alt="POS">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="shopping-cart" class="text-emerald-500 w-5 h-5"></i> High-Speed POS
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">3-tiered organization for lightning-fast treatment and product checkouts.</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Agenda.png" class="rounded-2xl border border-white/5 mb-6" alt="Agenda">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="calendar" class="text-emerald-500 w-5 h-5"></i> Digital Register
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Professional columned agenda view matching physical appointment books for stylists.</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Service Queue.png" class="rounded-2xl border border-white/5 mb-6" alt="Queue">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="cloud-lightning" class="text-emerald-500 w-5 h-5"></i> Service Queue
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Kiosk orders appear instantly in the queue for professional processing.</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="features-grid">
-                <!-- Features injected via JS -->
+            <!-- Group 2: Intelligence & SARS -->
+            <div class="mb-32">
+                <div class="flex items-end justify-between mb-16 border-b border-white/5 pb-8">
+                    <div>
+                        <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">Module Group 02</span>
+                        <h3 class="text-4xl md:text-5xl font-black uppercase tracking-tighter mt-2">Compliance & Data</h3>
+                    </div>
+                    <p class="text-white/20 text-xs font-bold hidden md:block">CRM • Analytics • SARS</p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/CRM.png" class="rounded-2xl border border-white/5 mb-6" alt="CRM">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="users" class="text-emerald-500 w-5 h-5"></i> Technical CRM
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Immutable color histories and visit records stored securely on-site.</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Reports.png" class="rounded-2xl border border-white/5 mb-6" alt="Reports">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="bar-chart-3" class="text-emerald-500 w-5 h-5"></i> Stats Hub
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Financial analytics with exportable PDF/CSV reports for tax season.</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/sars.png" class="rounded-2xl border border-white/5 mb-6" alt="SARS">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="file-text" class="text-emerald-500 w-5 h-5"></i> SARS Gateway
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Seamless switching between 0%, 14%, and 15% VAT for local standards.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group 3: Core Security -->
+            <div>
+                <div class="flex items-end justify-between mb-16 border-b border-white/5 pb-8">
+                    <div>
+                        <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">Module Group 03</span>
+                        <h3 class="text-4xl md:text-5xl font-black uppercase tracking-tighter mt-2">Security Vault</h3>
+                    </div>
+                    <p class="text-white/20 text-xs font-bold hidden md:block">Audit • Access • Defense</p>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Security.png" class="rounded-2xl border border-white/5 mb-6" alt="Security">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="shield-check" class="text-emerald-500 w-5 h-5"></i> 3-Tier Security
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Strict Admin, Manager, and Staff hierarchy with individual PIN signatures.</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Master db.png" class="rounded-2xl border border-white/5 mb-6" alt="Master DB">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="hard-drive" class="text-emerald-500 w-5 h-5"></i> Data Safety
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Nightly local backup protocols with rapid restoration on any machine.</p>
+                    </div>
+                    <div class="glass-card p-10 rounded-[3rem] space-y-6">
+                        <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Admin.png" class="rounded-2xl border border-white/5 mb-6" alt="Admin">
+                        <h4 class="text-xl font-black uppercase tracking-tight text-white flex items-center gap-3">
+                            <i data-lucide="lock" class="text-emerald-500 w-5 h-5"></i> Owner Suite
+                        </h4>
+                        <p class="text-sm text-white/40 leading-relaxed font-medium">Centralized control over salon identity, team access, and legal parameters.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Downloads Section -->
-    <section id="download" class="py-32 bg-brand-black border-y border-brand-border overflow-hidden relative">
-        <div class="absolute inset-0 bg-emerald-600/5 blur-[120px] rounded-full translate-y-1/2"></div>
-        <div class="container mx-auto px-6 relative z-10 text-center">
-            <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tighter mb-12 leading-none">Ready for <br/><span class="gradient-text">Deployment</span></h2>
+    <section id="download" class="py-32 bg-brand-black relative overflow-hidden">
+        <div class="absolute inset-0 bg-emerald-500/5 blur-[150px] rounded-full translate-y-1/2"></div>
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-12">Deploy Your <br/><span class="gradient-text">Master Build</span></h2>
             
-            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="glass p-12 rounded-[4rem] border-white/5 hover:border-emerald-500/40 transition-all group">
-                    <div class="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center text-white mb-8 mx-auto group-hover:scale-110 transition-transform">
-                        <i data-lucide="monitor" class="w-10 h-10"></i>
+            <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-10">
+                <div class="glass p-12 rounded-[4rem] space-y-10 group hover:border-emerald-500/40 transition-all">
+                    <div class="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto text-emerald-500 group-hover:scale-110 transition-transform">
+                        <i data-lucide="monitor" class="w-12 h-12"></i>
                     </div>
-                    <h3 class="text-2xl font-black uppercase mb-4">Desktop Build</h3>
-                    <p class="text-sm text-white/40 mb-10 font-bold uppercase tracking-widest">Windows .EXE Installer</p>
-                    <a href="releases/IsaacsPOS.exe" download class="block w-full py-6 bg-white text-brand-black rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 hover:text-white transition-all">Download for PC</a>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl font-black uppercase">Terminal Node</h3>
+                        <p class="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">Windows Desktop Build</p>
+                    </div>
+                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Setup.exe" class="block w-full py-6 bg-white text-black rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 hover:text-white transition-all">Download .EXE Build</a>
                 </div>
-                <div class="glass p-12 rounded-[4rem] border-white/5 hover:border-emerald-500/40 transition-all group">
-                    <div class="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center text-white mb-8 mx-auto group-hover:scale-110 transition-transform">
-                        <i data-lucide="smartphone" class="w-10 h-10"></i>
+
+                <div class="glass p-12 rounded-[4rem] space-y-10 group hover:border-emerald-500/40 transition-all">
+                    <div class="w-24 h-24 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto text-emerald-500 group-hover:scale-110 transition-transform">
+                        <i data-lucide="smartphone" class="w-12 h-12"></i>
                     </div>
-                    <h3 class="text-2xl font-black uppercase mb-4">Mobile Kiosk</h3>
-                    <p class="text-sm text-white/40 mb-10 font-bold uppercase tracking-widest">Android .APK Package</p>
-                    <a href="releases/IsaacsPOS.apk" download class="block w-full py-6 bg-emerald-600 text-white rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">Download for Android</a>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl font-black uppercase">Mobile Kiosk</h3>
+                        <p class="text-[10px] font-black tracking-[0.4em] text-white/30 uppercase">Android Client Interface</p>
+                    </div>
+                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Kiosk.apk" class="block w-full py-6 btn-primary text-black rounded-3xl font-black uppercase text-xs tracking-widest shadow-2xl transition-all">Download .APK Package</a>
                 </div>
             </div>
-            
-            <p class="mt-12 text-[10px] font-black uppercase text-white/20 tracking-widest">v2.1.0 Stable Build • Contact us for Demo Token activation</p>
         </div>
     </section>
 
-    <!-- Contact Section -->
+    <!-- Contact & Demo Request Section -->
     <section id="contact" class="py-32 bg-brand-dark relative overflow-hidden">
         <div class="container mx-auto px-6 relative z-10">
-            <div class="max-w-6xl mx-auto glass rounded-[4rem] p-12 md:p-24 border-emerald-500/10 shadow-2xl flex flex-col lg:flex-row gap-20">
-                <div class="lg:w-1/2 space-y-8">
-                    <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none text-glow">Master <br/><span class="text-emerald-500">Registry</span></h2>
-                    <p class="text-xl text-white/60 leading-relaxed font-medium">
-                        Request your unique system demo token or join our partner network. Our technical team is ready to assist your migration.
+            <div class="max-w-6xl mx-auto glass rounded-[5rem] p-12 md:p-24 border-emerald-500/10 shadow-2xl flex flex-col lg:flex-row gap-24">
+                <div class="lg:w-1/2 space-y-10">
+                    <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none">Register <br/><span class="text-emerald-500 text-glow">Gateway.</span></h2>
+                    <p class="text-xl text-white/50 leading-relaxed font-medium">
+                        Request your demo token or join our partner network. Our engineers will assist with your local database architecture.
                     </p>
-                    <div class="space-y-6 pt-6">
-                        <div class="flex items-center gap-6">
-                            <div class="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center text-emerald-500"><i data-lucide="mail"></i></div>
-                            <span class="text-sm font-black uppercase text-white/80">support@isaacsandpartners.online</span>
+                    <div class="space-y-8 pt-4">
+                        <div class="flex items-center gap-8 group">
+                            <div class="w-16 h-16 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 transition-all border border-emerald-500/20"><i data-lucide="mail"></i></div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-white/30">Email Enquiries</span>
+                                <span class="text-lg font-black uppercase text-white/80">support@isaacsandpartners.online</span>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-6">
-                            <div class="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center text-emerald-500"><i data-lucide="message-square"></i></div>
-                            <span class="text-sm font-black uppercase text-white/80">Maaliek Isaacs: +27 71 883 1097</span>
+                        <div class="flex items-center gap-8 group">
+                            <div class="w-16 h-16 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 transition-all border border-emerald-500/20"><i data-lucide="message-square"></i></div>
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-black uppercase tracking-widest text-white/30">WhatsApp Direct</span>
+                                <span class="text-lg font-black uppercase text-white/80">+27 71 883 1097</span>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="lg:w-1/2">
-                    <form class="grid grid-cols-1 md:grid-cols-2 gap-6" onsubmit="event.preventDefault()">
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-white/40 tracking-widest ml-2">Legal Salon Name</label>
-                            <input type="text" class="w-full p-6 rounded-2xl text-xs font-black uppercase" placeholder="Enter name...">
+                    <form id="demo-form" class="grid gap-6">
+                        <div class="grid sm:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black uppercase text-white/30 tracking-widest ml-4">Salon Identity</label>
+                                <input type="text" id="form-name" required class="w-full p-6 glass rounded-3xl text-xs font-black uppercase outline-none focus:border-emerald-500 border-white/5 transition-all" placeholder="Legal Name">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black uppercase text-white/30 tracking-widest ml-4">Registry Email</label>
+                                <input type="email" id="form-email" required class="w-full p-6 glass rounded-3xl text-xs font-black uppercase outline-none focus:border-emerald-500 border-white/5 transition-all" placeholder="Admin Address">
+                            </div>
                         </div>
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black uppercase text-white/40 tracking-widest ml-2">Admin Email</label>
-                            <input type="email" class="w-full p-6 rounded-2xl text-xs font-black uppercase" placeholder="email@salon.com">
+                            <label class="text-[10px] font-black uppercase text-white/30 tracking-widest ml-4">Deployment Category</label>
+                            <input type="text" id="form-category" required class="w-full p-6 glass rounded-3xl text-xs font-black uppercase outline-none focus:border-emerald-500 border-white/5 transition-all" placeholder="e.g. Barber, Salon, Spa">
                         </div>
-                        <div class="md:col-span-2 space-y-2">
-                            <label class="text-[10px] font-black uppercase text-white/40 tracking-widest ml-2">Registration Notes</label>
-                            <textarea class="w-full p-6 rounded-2xl text-xs font-black uppercase h-32" placeholder="Scale and requirements..."></textarea>
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black uppercase text-white/30 tracking-widest ml-4">System Notes</label>
+                            <textarea id="form-notes" class="w-full p-6 glass rounded-3xl text-xs font-black uppercase h-40 resize-none outline-none focus:border-emerald-500 border-white/5 transition-all" placeholder="Preferred Demo Date..."></textarea>
                         </div>
-                        <button class="md:col-span-2 py-8 bg-emerald-600 text-white rounded-3xl font-black uppercase text-xs tracking-[0.3em] shadow-2xl active:scale-95 transition-transform">
-                            Request Demo Token
+                        <button type="submit" class="py-8 btn-primary text-black rounded-[2.5rem] font-black uppercase text-xs tracking-[0.4em] shadow-2xl active:scale-95 transition-all">
+                            Submit Master Request
                         </button>
                     </form>
                 </div>
@@ -330,194 +468,192 @@
     </section>
 
     <!-- Footer -->
-    <footer class="py-20 bg-brand-black border-t border-brand-border">
-        <div class="container mx-auto px-6">
-            <div class="flex flex-col md:flex-row justify-between items-start gap-12">
-                <div class="max-w-sm">
-                    <div class="text-3xl font-black tracking-tighter text-emerald-500 mb-6 uppercase italic">ISAACSPOS</div>
-                    <p class="text-white/40 text-xs font-bold leading-relaxed mb-8">
-                        Isaacs and Partners Pty(Ltd). A premium multi-platform Salon POS system featuring technical color registries and SARS compliance.
+    <footer class="py-24 bg-brand-black border-t border-white/5 relative z-10">
+        <div class="container mx-auto px-8">
+            <div class="flex flex-col md:flex-row justify-between items-start gap-20">
+                <div class="max-w-sm space-y-8">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+                            <span class="text-xl font-black italic text-white">I</span>
+                        </div>
+                        <span class="text-3xl font-black tracking-tighter text-emerald-500 uppercase italic">ISAACSPOS</span>
+                    </div>
+                    <p class="text-white/30 text-xs font-bold leading-relaxed">
+                        Isaacs and Partners Pty(Ltd). A premium multi-platform Salon POS system featuring technical color registries and official SARS compliance. 
                     </p>
-                    <p class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.4em] flex items-center gap-2">
-                        <i data-lucide="map-pin" class="w-3 h-3"></i> Built in South Africa
-                    </p>
+                    <div class="flex items-center gap-4 text-emerald-500">
+                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></div>
+                        <span class="text-[10px] font-black uppercase tracking-[0.4em]">Built in South Africa</span>
+                    </div>
                 </div>
                 
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-16">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-20">
                     <div>
-                        <h5 class="text-[10px] font-black uppercase text-white mb-6 tracking-widest">System</h5>
-                        <ul class="space-y-4 text-xs font-bold text-white/30">
-                            <li><a href="#" class="hover:text-emerald-400">Documentation</a></li>
-                            <li><a href="#" class="hover:text-emerald-400">Z-Report Guide</a></li>
-                            <li><a href="#" class="hover:text-emerald-400">Hub Sync</a></li>
+                        <h5 class="text-[10px] font-black uppercase text-white mb-8 tracking-[0.3em]">Module Hub</h5>
+                        <ul class="space-y-5 text-xs font-black uppercase text-white/20">
+                            <li><a href="#" class="hover:text-emerald-400 transition-colors">Digital Folios</a></li>
+                            <li><a href="#" class="hover:text-emerald-400 transition-colors">CRM Ledger</a></li>
+                            <li><a href="#" class="hover:text-emerald-400 transition-colors">Audit Stats</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h5 class="text-[10px] font-black uppercase text-white mb-6 tracking-widest">Legal</h5>
-                        <ul class="space-y-4 text-xs font-bold text-white/30">
-                            <li><a href="#" class="hover:text-emerald-400">Privacy Policy</a></li>
-                            <li><a href="#" class="hover:text-emerald-400">SARS Compliance</a></li>
-                            <li><a href="#" class="hover:text-emerald-400">License Terms</a></li>
+                        <h5 class="text-[10px] font-black uppercase text-white mb-8 tracking-[0.3em]">Legal</h5>
+                        <ul class="space-y-5 text-xs font-black uppercase text-white/20">
+                            <li><a href="#" class="hover:text-emerald-400 transition-colors">SARS Compliance</a></li>
+                            <li><a href="#" class="hover:text-emerald-400 transition-colors">Terms of Use</a></li>
+                            <li><a href="#" class="hover:text-emerald-400 transition-colors">Privacy Policy</a></li>
                         </ul>
+                    </div>
+                    <div class="hidden lg:block">
+                        <h5 class="text-[10px] font-black uppercase text-white mb-8 tracking-[0.3em]">Connect</h5>
+                        <div class="flex gap-6">
+                            <a href="#" class="text-white/20 hover:text-emerald-500 transition-colors"><i data-lucide="instagram"></i></a>
+                            <a href="#" class="text-white/20 hover:text-emerald-500 transition-colors"><i data-lucide="linkedin"></i></a>
+                            <a href="#" class="text-white/20 hover:text-emerald-500 transition-colors"><i data-lucide="facebook"></i></a>
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div class="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between gap-4 text-center md:text-left">
-                <p class="text-white/20 text-[9px] font-black uppercase tracking-widest">© 2026 Isaacs & Partners. All rights reserved. Registered South Africa.</p>
-                <p class="text-white/20 text-[9px] font-black uppercase tracking-widest">v2.1.0 STABLE MASTER BUILD</p>
+            <div class="mt-24 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between gap-6 text-center md:text-left">
+                <p class="text-white/10 text-[9px] font-black uppercase tracking-[0.3em]">© 2026 Isaacs & Partners. All rights reserved.</p>
+                <p class="text-emerald-500/20 text-[9px] font-black uppercase tracking-[0.3em]">V2.1.0 STABLE MASTER BUILD</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Data Definitions
-        const features = [
-            { title: "Smart POS Checkout", desc: "Blazing fast interface optimized for high-velocity walk-in and booking transactions.", icon: "cash-register" },
-            { title: "Technical CRM", desc: "Securely store color formulas, chemical codes, and technical registries locally.", icon: "user-tag" },
-            { title: "Loyalty Engine", desc: "Calculate points automatically based on spend. Reward your highest value clients.", icon: "ticket" },
-            { title: "Intelligent Agenda", desc: "Visual drag-and-drop booking system for stylists and treatment rooms.", icon: "calendar" },
-            { title: "WhatsApp Automation", desc: "Send receipts, reminders, and marketing promos directly via our hub integration.", icon: "message-circle" },
-            { title: "Digital Folios", desc: "Track every service item, retail product, and tax component in real-time.", icon: "file-text" },
-            { title: "Z-Report Audit", desc: "End-of-day financial reconciliation against physical terminal totals.", icon: "scale" },
-            { title: "Inventory Vault", desc: "Track professional back-bar stock and retail inventory with low-stock alerts.", icon: "package" },
-            { title: "Branding Engine", desc: "Customize the POS interface and receipts with your salon's visual identity.", icon: "palette" },
-            { title: "AI Marketing Hub", desc: "Harness Gemini 3 AI to generate high-conversion promotion copy instantly.", icon: "sparkles" },
-            { title: "Role-Based Access", desc: "Strict 3-tier security for Admin, Manager, and Staff hierarchy protection.", icon: "lock" },
-            { title: "Multi-Branch Ready", desc: "Consolidate reporting globally while maintaining local-first uptime.", icon: "layers" },
-            { title: "SQLite Master DB", desc: "Ultra-secure, light, and portable database architecture for data sovereignty.", icon: "database" },
-            { title: "Developer Plugins", desc: "Extensible system architecture allowing for custom feature integrations.", icon: "plug" },
-            { title: "Cloud-Optional", desc: "You decide when and if your data syncs. 100% control over migration.", icon: "cloud" },
-            { title: "Compliance Ready", desc: "Automated Tax Invoices hard-coded with VAT and legal registration data.", icon: "check-circle" }
-        ];
-
-        const screenshots = [
-            "https://picsum.photos/seed/pos1/800/600", // admin.png
-            "https://picsum.photos/seed/pos2/800/600", // Booking.png
-            "https://picsum.photos/seed/pos3/800/600", // CRM.png
-            "https://picsum.photos/seed/pos4/800/600", // Customer Portal.png
-            "https://picsum.photos/seed/pos5/800/600", // Gemini broadcast.png
-            "https://picsum.photos/seed/pos6/800/600", // Inventory.png
-            "https://picsum.photos/seed/pos7/800/600", // Master db.png
-            "https://picsum.photos/seed/pos8/800/600"  // Sales Screen.png
-        ];
-
-        // UI Injection
-        const featuresGrid = document.getElementById('features-grid');
-        features.forEach(f => {
-            const card = document.createElement('div');
-            card.className = 'glass p-8 rounded-[2.5rem] feature-card border-brand-border flex flex-col h-full group hover:bg-emerald-600/5 hover:border-emerald-500/40 transition-all';
-            card.innerHTML = `
-                <div class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-emerald-500 mb-6 group-hover:scale-110 transition-transform">
-                    <i data-lucide="${f.icon}"></i>
-                </div>
-                <h4 class="text-lg font-black uppercase mb-4 leading-tight">${f.title}</h4>
-                <p class="text-xs text-white/40 font-bold leading-relaxed mb-6 flex-1">${f.desc}</p>
-                <div class="h-px bg-white/5 w-full mt-auto mb-4"></div>
-                <div class="flex items-center gap-2 text-[8px] font-black uppercase text-emerald-500 tracking-widest">
-                    <span>Enterprise Module</span>
-                    <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                </div>
-            `;
-            featuresGrid.appendChild(card);
-        });
-
         lucide.createIcons();
 
-        // 3D Engine Setup
-        const textureLoader = new THREE.TextureLoader();
+        // Updated Assets with new filenames from user's latest request
+        const screenshots = [
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Sales Screen.png", label: "High-Velocity POS" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Agenda.png", label: "Intelligent Agenda" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/CRM.png", label: "Technical CRM" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Customer Portal.png", label: "Self-Service Kiosk" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Reports.png", label: "Analytics Dashboard" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Admin.png", label: "Web Manager Suite" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Inventory.png", label: "Master Catalog" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Gemini broadcast.png", label: "WhatsApp Integration" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/sars.png", label: "SARS Compliance" },
+            { src: "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Security.png", label: "Immutable Security Logs" }
+        ];
 
-        // Hero Three.js Scene
-        const initHeroScene = () => {
+        const textureLoader = new THREE.TextureLoader();
+        const setTextureQuality = (tex) => {
+            tex.anisotropy = 16;
+            tex.minFilter = THREE.LinearFilter;
+            tex.magFilter = THREE.LinearFilter;
+            tex.needsUpdate = true;
+        };
+
+        // Hero Particles
+        const initHero = () => {
             const canvas = document.getElementById('hero-canvas');
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            const tabletGroup = new THREE.Group();
-            scene.add(tabletGroup);
-
-            const frame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.8, 0.15), new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1, emissive: 0x10b981, emissiveIntensity: 0.05 }));
-            tabletGroup.add(frame);
-
-            const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.7, 2.5), new THREE.MeshBasicMaterial({ color: 0x050505 }));
-            screen.position.z = 0.08;
-            tabletGroup.add(screen);
-
-            const particleSystem = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.5 }));
-            const positions = new Float32Array(1500 * 3);
-            for(let i=0; i<1500*3; i++) positions[i] = (Math.random()-0.5)*15;
-            particleSystem.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            scene.add(particleSystem);
-
-            const mainLight = new THREE.DirectionalLight(0xffffff, 2); mainLight.position.set(5, 5, 5); scene.add(mainLight);
-            const accentLight = new THREE.PointLight(0x10b981, 10, 10); accentLight.position.set(-2, 1, 2); scene.add(accentLight);
+            const particles = new THREE.BufferGeometry();
+            const count = 4000;
+            const pos = new Float32Array(count * 3);
+            for(let i=0; i<count*3; i++) pos[i] = (Math.random() - 0.5) * 15;
+            particles.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            const material = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.6 });
+            const mesh = new THREE.Points(particles, material);
+            scene.add(mesh);
             camera.position.z = 6;
-
-            let mouseX = 0, mouseY = 0;
-            window.addEventListener('mousemove', (e) => { mouseX = (e.clientX/window.innerWidth)-0.5; mouseY = (e.clientY/window.innerHeight)-0.5; });
 
             const animate = () => {
                 requestAnimationFrame(animate);
-                const time = Date.now() * 0.001;
-                tabletGroup.rotation.y = THREE.MathUtils.lerp(tabletGroup.rotation.y, mouseX * 0.5, 0.05);
-                tabletGroup.rotation.x = THREE.MathUtils.lerp(tabletGroup.rotation.x, mouseY * -0.5, 0.05);
-                tabletGroup.position.y = Math.sin(time) * 0.1;
-                particleSystem.rotation.y += 0.001;
+                mesh.rotation.y += 0.0003;
+                mesh.rotation.x += 0.0001;
                 renderer.render(scene, camera);
             };
             animate();
-
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
         };
 
-        // Showcase Three.js Scene
-        const initShowcaseScene = () => {
+        // Interactive 3D Showcase
+        const initShowcase = () => {
             const canvas = document.getElementById('showcase-canvas');
             const scene = new THREE.Scene();
-            scene.background = null; 
-
             const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-            camera.position.set(0, 0, 8);
-
-            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
             const controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.enablePan = false;
             controls.autoRotate = true;
-            controls.autoRotateSpeed = 1.0;
+            controls.autoRotateSpeed = 0.8;
+            camera.position.set(0, 0, 11);
 
-            const ambient = new THREE.AmbientLight(0xffffff, 0.8); scene.add(ambient);
-            const light = new THREE.DirectionalLight(0xffffff, 0.5); light.position.set(5, 10, 5); scene.add(light);
+            const ambient = new THREE.AmbientLight(0xffffff, 1.0); scene.add(ambient);
+            const light = new THREE.DirectionalLight(0xffffff, 0.8); light.position.set(5, 10, 5); scene.add(light);
 
-            const cubes = [];
-            screenshots.forEach((src, i) => {
-                const texture = textureLoader.load(src);
-                const geometry = new THREE.BoxGeometry(2.5, 1.8, 0.08);
-                const material = new THREE.MeshStandardMaterial({ map: texture, metalness: 0.5, roughness: 0.2 });
-                const cube = new THREE.Mesh(geometry, material);
-                
-                const angle = (i / screenshots.length) * Math.PI * 2;
-                const radius = 4;
-                cube.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 2, Math.sin(angle) * radius);
-                cube.lookAt(0, 0, 0);
-                
-                scene.add(cube);
-                cubes.push(cube);
+            const cards = [];
+            const radius = 7;
+            const labelEl = document.getElementById('carousel-label');
+
+            screenshots.forEach((item, i) => {
+                textureLoader.load(item.src, (tex) => {
+                    setTextureQuality(tex);
+                    const geom = new THREE.BoxGeometry(4.0, 2.6, 0.08);
+                    const mat = new THREE.MeshStandardMaterial({ 
+                        map: tex, 
+                        metalness: 0.4, 
+                        roughness: 0.3,
+                        emissive: 0x10b981,
+                        emissiveIntensity: 0.02
+                    });
+                    const card = new THREE.Mesh(geom, mat);
+                    
+                    const angle = (i / screenshots.length) * Math.PI * 2;
+                    card.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 2, Math.sin(angle) * radius);
+                    card.lookAt(0, 0, 0);
+                    card.userData = { label: item.label };
+                    
+                    scene.add(card);
+                    cards.push(card);
+
+                    if (i === 0) labelEl.textContent = item.label;
+                });
             });
+
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+
+            const onMouseMove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+            };
+            canvas.addEventListener('mousemove', onMouseMove);
 
             const animate = () => {
                 requestAnimationFrame(animate);
-                cubes.forEach((cube, i) => {
-                    cube.position.y += Math.sin(Date.now() / 1000 + i) * 0.002;
+                cards.forEach((c, i) => {
+                    c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.003;
                 });
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(cards);
+                if (intersects.length > 0) {
+                    labelEl.textContent = intersects[0].object.userData.label;
+                    labelEl.style.color = "#10b981";
+                    labelEl.style.transform = "scale(1.1)";
+                    document.body.style.cursor = 'pointer';
+                } else {
+                    labelEl.style.color = "white";
+                    labelEl.style.transform = "scale(1)";
+                    document.body.style.cursor = 'default';
+                }
+
                 controls.update();
                 renderer.render(scene, camera);
             };
@@ -530,37 +666,49 @@
             });
         };
 
-        // Initialize all
-        initHeroScene();
-        initShowcaseScene();
+        // Demo Form Persistence
+        const demoForm = document.getElementById('demo-form');
+        demoForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const request = {
+                id: Date.now(),
+                name: document.getElementById('form-name').value,
+                email: document.getElementById('form-email').value,
+                category: document.getElementById('form-category').value,
+                notes: document.getElementById('form-notes').value,
+                timestamp: new Date().toISOString()
+            };
 
-        // GSAP Scroll Animations
+            const existing = JSON.parse(localStorage.getItem('isaacs_demo_requests') || '[]');
+            existing.push(request);
+            localStorage.setItem('isaacs_demo_requests', JSON.stringify(existing));
+
+            // Feedback
+            const host = document.getElementById('notification-host');
+            const note = document.createElement('div');
+            note.className = 'glass px-10 py-5 rounded-2xl border-emerald-500/40 text-emerald-400 font-black uppercase text-xs tracking-widest shadow-2xl animate-in fade-in slide-in-from-bottom-5';
+            note.innerHTML = `<div class="flex items-center gap-3"><i data-lucide="check-circle"></i> Demo Request Logged Successfully</div>`;
+            host.appendChild(note);
+            lucide.createIcons();
+            
+            demoForm.reset();
+            setTimeout(() => note.remove(), 4000);
+        });
+
+        initHero();
+        initShowcase();
+
+        // Global scroll reveal
         gsap.registerPlugin(ScrollTrigger);
-
-        gsap.from(".feature-card", {
-            opacity: 0,
-            y: 50,
-            duration: 1,
-            stagger: 0.1,
-            scrollTrigger: { trigger: "#features", start: "top 70%" }
+        gsap.utils.toArray('.glass-card').forEach(card => {
+            gsap.from(card, {
+                opacity: 0,
+                y: 50,
+                duration: 1,
+                scrollTrigger: { trigger: card, start: "top 85%" }
+            });
         });
-
-        gsap.from("#workflow .glass", {
-            opacity: 0,
-            x: -30,
-            duration: 1,
-            stagger: 0.2,
-            scrollTrigger: { trigger: "#workflow", start: "top 70%" }
-        });
-
-        gsap.from("#download .glass", {
-            scale: 0.9,
-            opacity: 0,
-            duration: 1.2,
-            stagger: 0.3,
-            scrollTrigger: { trigger: "#download", start: "top 70%" }
-        });
-
     </script>
 </body>
 </html>

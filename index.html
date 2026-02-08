@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>IsaacsPOS — Professional Salon Management</title>
     
-    <!-- Tailwind CSS -->
+    <!-- Core Dependencies (Loaded synchronously to prevent ReferenceErrors) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Google Fonts -->
@@ -18,8 +23,7 @@
             --dark-bg: #050505;
         }
 
-        * { cursor: default; margin: 0; padding: 0; box-sizing: border-box; }
-        
+        * { cursor: default; }
         body {
             background-color: var(--dark-bg);
             color: #ffffff;
@@ -28,7 +32,6 @@
             scroll-behavior: smooth;
         }
 
-        /* Glassmorphism */
         .glass {
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(25px);
@@ -45,7 +48,8 @@
         .glass-card:hover {
             background: rgba(16, 185, 129, 0.08);
             border-color: rgba(16, 185, 129, 0.6);
-            transform: translateY(-10px);
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6), 0 0 40px rgba(16, 185, 129, 0.2);
         }
 
         .gradient-text {
@@ -58,336 +62,455 @@
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none;
+            opacity: 0.8;
         }
 
         .showcase-container {
             width: 100%;
-            height: 600px;
+            height: 700px;
             position: relative;
-            background: radial-gradient(circle at center, rgba(16, 185, 129, 0.03) 0%, transparent 70%);
         }
 
         #showcase-canvas {
             width: 100% !important;
             height: 100% !important;
             display: block;
+            touch-action: none;
         }
 
-        /* Safe-Boot Animations: Default visible to prevent black screen */
-        .reveal { 
-            opacity: 1; 
-            transform: none; 
+        .floating {
+            animation: float 10s ease-in-out infinite;
         }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(1.5deg); }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--dark-bg); }
+        ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
 
         .btn-primary {
             background: var(--emerald-strong);
             box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
         }
         .btn-primary:hover {
-            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.4);
-            transform: translateY(-2px);
+            box-shadow: 0 20px 50px rgba(16, 185, 129, 0.6);
+            transform: translateY(-4px) scale(1.03);
         }
+
+        /* Reveal animations - set initial opacity 1 as fallback to prevent black screen */
+        .reveal { opacity: 0; transform: translateY(30px); }
+        .safe-mode .reveal { opacity: 1 !important; transform: none !important; }
 
         input, textarea { cursor: text !important; }
         button, a, label { cursor: pointer !important; }
-
-        @media (max-width: 768px) {
-            .showcase-container { height: 450px; }
-            h1 { font-size: 3rem !important; }
-        }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased selection:bg-emerald-500 selection:text-black">
 
-    <!-- Nav -->
-    <nav class="fixed top-0 w-full z-[100] px-6 py-4 flex justify-between items-center glass border-b border-white/5">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center font-black italic shadow-lg">I</div>
+    <div id="notification-host"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-[100] px-6 lg:px-12 py-5 flex justify-between items-center glass border-b border-white/5">
+        <div class="flex items-center gap-4 group cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-emerald-500/20">
+                <span class="text-2xl font-black italic text-white">I</span>
+            </div>
             <div class="flex flex-col">
-                <span class="text-lg font-black tracking-tighter uppercase leading-none">IsaacsPOS</span>
-                <span class="text-[8px] font-bold text-emerald-500 tracking-widest uppercase">Enterprise V2.1</span>
+                <span class="text-xl font-black tracking-tighter uppercase leading-none">IsaacsPOS</span>
+                <span class="text-[9px] font-bold text-emerald-500 tracking-[0.4em] uppercase">Enterprise V2.1</span>
             </div>
         </div>
-        <div class="hidden md:flex gap-8 text-[9px] font-black uppercase tracking-widest text-white/40">
+        <div class="hidden lg:flex gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
             <a href="#about" class="hover:text-emerald-400 transition-colors">Philosophy</a>
             <a href="#showcase" class="hover:text-emerald-400 transition-colors">3D Showcase</a>
             <a href="#capabilities" class="hover:text-emerald-400 transition-colors">Modules</a>
+            <a href="#download" class="hover:text-emerald-400 transition-colors">Deploy</a>
         </div>
-        <a href="#contact" class="px-6 py-2 bg-white text-black rounded-full font-black text-[9px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
-            Join Network
-        </a>
+        <div class="flex items-center gap-6">
+            <a href="#contact" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-xl active:scale-95">
+                Join Network
+            </a>
+        </div>
     </nav>
 
     <!-- Hero -->
     <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         <canvas id="hero-canvas"></canvas>
         <div class="container mx-auto px-6 relative z-10 text-center">
-            <div class="inline-flex items-center gap-2 px-5 py-2 rounded-full glass border-emerald-500/30 text-[9px] font-black tracking-widest text-emerald-400 uppercase mb-8">
+            <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full glass border-emerald-500/30 text-[9px] font-black tracking-[0.4em] text-emerald-400 uppercase mb-12 animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981]"></span>
                 Industrial Grade POS Architecture
             </div>
-            <h1 class="text-5xl md:text-8xl font-black tracking-tighter mb-6 leading-none">
+            <h1 class="text-6xl md:text-9xl font-black tracking-tighter mb-8 leading-[0.85]">
                 Intelligent <br/>
                 <span class="gradient-text">Business Mastery</span>
             </h1>
-            <p class="text-base md:text-xl text-white/50 max-w-2xl mx-auto font-medium mb-12">
-                Local-First speed meeting Cloud-Sync intelligence. <br/>
-                Proprietary SQLite Master Node architecture.
+            <p class="text-lg md:text-2xl text-white/50 max-w-4xl mx-auto font-medium leading-relaxed mb-16 px-4">
+                Local-First speed meeting Cloud-Sync intelligence. <br class="hidden md:block" />
+                Experience 100% uptime with our proprietary SQLite Master Node architecture.
             </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <a href="#contact" class="px-10 py-5 btn-primary text-black rounded-xl font-black uppercase text-[10px] tracking-widest">
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <a href="#contact" class="px-12 py-6 btn-primary text-black rounded-2xl font-black uppercase text-xs tracking-[0.3em]">
                     Book Private Demo
                 </a>
-                <a href="#download" class="px-10 py-5 glass border-white/10 text-white rounded-xl font-black uppercase text-[10px] tracking-widest flex items-center gap-2">
-                    Deploy Terminal
+                <a href="#download" class="px-12 py-6 glass border-white/10 hover:bg-white/5 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3">
+                    <i data-lucide="cpu" class="w-4 h-4 text-emerald-500"></i> Deploy Terminal
                 </a>
             </div>
         </div>
+        <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-20">
+            <span class="text-[9px] font-black uppercase tracking-[0.5em]">Scroll to Access</span>
+            <div class="w-px h-16 bg-gradient-to-b from-emerald-500 to-transparent"></div>
+        </div>
     </section>
 
-    <!-- About -->
-    <section id="about" class="py-32 bg-[#080808] border-y border-white/5">
+    <!-- Architecture -->
+    <section id="about" class="py-40 relative bg-[#080808] border-y border-white/5">
         <div class="container mx-auto px-6">
-            <div class="grid lg:grid-cols-2 gap-16 items-center">
-                <div class="space-y-8 reveal">
-                    <span class="text-emerald-500 font-black text-[10px] uppercase tracking-widest">System Logic</span>
-                    <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">
+            <div class="grid lg:grid-cols-2 gap-24 items-center">
+                <div class="space-y-10 reveal">
+                    <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">System Logic</span>
+                    <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none">
                         Local Data <br/><span class="text-emerald-500">Sovereignty.</span>
                     </h2>
-                    <p class="text-lg text-white/40 leading-relaxed">
-                        Your business shouldn't stop when the cloud fails. IsaacsPOS runs natively on your machine, ensuring zero-latency transactions regardless of internet status.
+                    <p class="text-xl text-white/40 leading-relaxed font-medium">
+                        Your business shouldn't stop when the cloud fails. IsaacsPOS runs natively on your machine, ensuring 
+                        <strong class="text-white">zero-latency transactions</strong> regardless of internet status. 
                     </p>
-                    <div class="grid sm:grid-cols-2 gap-8 pt-4">
-                        <div class="p-6 glass rounded-2xl border-white/5">
-                            <h4 class="font-black uppercase text-[10px] text-white mb-2">Encrypted Vault</h4>
-                            <p class="text-xs text-white/30">Financial data stays on your premises. Total ownership of history.</p>
+                    <div class="grid sm:grid-cols-2 gap-10 pt-6">
+                        <div class="space-y-4">
+                            <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                <i data-lucide="database"></i>
+                            </div>
+                            <h4 class="font-black uppercase text-xs tracking-widest text-white">Encrypted Vault</h4>
+                            <p class="text-sm text-white/30 leading-relaxed">Financial data stays on your premises. Total ownership of your operational history.</p>
                         </div>
-                        <div class="p-6 glass rounded-2xl border-white/5">
-                            <h4 class="font-black uppercase text-[10px] text-white mb-2">Hybrid-Sync</h4>
-                            <p class="text-xs text-white/30">Local processing with secure background cloud-sync.</p>
+                        <div class="space-y-4">
+                            <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                <i data-lucide="cloud-lightning"></i>
+                            </div>
+                            <h4 class="font-black uppercase text-xs tracking-widest text-white">Hybrid-Sync</h4>
+                            <p class="text-sm text-white/30 leading-relaxed">Transactions process locally and sync securely to the backup registry when online.</p>
                         </div>
                     </div>
                 </div>
-                <div class="reveal">
-                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Landscape.png" class="rounded-3xl border border-white/10 shadow-2xl w-full" alt="Landscape">
+                <div class="relative group reveal">
+                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Landscape.png" alt="System Overview" class="relative z-10 rounded-[3.5rem] border border-white/10 shadow-3xl floating">
+                    <div class="absolute inset-0 bg-emerald-500/5 blur-[120px] rounded-full"></div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Showcase -->
-    <section id="showcase" class="py-32 bg-black overflow-hidden">
-        <div class="container mx-auto px-6 text-center mb-16">
-            <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tighter mb-4">Interface <span class="text-emerald-500">Matrix</span></h2>
-            <p class="text-white/20 font-black uppercase tracking-widest text-[9px]">Interactive 3D Viewport</p>
+    <section id="showcase" class="py-40 bg-black overflow-hidden">
+        <div class="container mx-auto px-6 text-center mb-24 reveal">
+            <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">Interface <span class="text-emerald-500">Matrix</span></h2>
+            <p class="text-white/30 font-black uppercase tracking-[0.6em] text-[10px]">Real-time high-fidelity interactive viewport</p>
         </div>
-        <div class="container mx-auto px-6 max-w-6xl">
-            <div class="glass p-2 md:p-6 rounded-[3rem] border-white/5 relative overflow-hidden group">
+        <div class="container mx-auto px-6 max-w-7xl reveal">
+            <div class="glass p-4 md:p-8 rounded-[4rem] md:rounded-[6rem] border-white/5 relative overflow-hidden group shadow-2xl">
                 <div class="showcase-container">
                     <canvas id="showcase-canvas"></canvas>
                 </div>
-                <div class="absolute top-6 left-6 p-4 glass rounded-2xl border-emerald-500/20 z-20 pointer-events-none">
-                    <p id="carousel-label" class="text-lg md:text-2xl font-black uppercase tracking-tighter text-white">System Standby...</p>
+                <div class="absolute top-8 left-8 md:top-12 md:left-12 p-6 md:p-8 glass rounded-[2.5rem] md:rounded-[3rem] border-emerald-500/20 z-20 pointer-events-none transition-all group-hover:border-emerald-500/60">
+                    <div class="flex items-center gap-4 mb-3 md:mb-4">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400">Tactile Viewport</span>
+                    </div>
+                    <p id="carousel-label" class="text-xl md:text-3xl font-black uppercase tracking-tighter text-white">Initializing Hub...</p>
+                </div>
+                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-4 md:gap-6 z-20 w-full px-4">
+                    <div class="px-6 md:px-10 py-3 md:py-5 glass rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-white/5 transition-all">
+                        <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-emerald-500"></i> Rotate
+                    </div>
+                    <div class="px-6 md:px-10 py-3 md:py-5 glass rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-white/5 transition-all">
+                        <i data-lucide="zoom-in" class="w-4 h-4 text-emerald-500"></i> Zoom
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Capabilities -->
-    <section id="capabilities" class="py-32 bg-[#080808]">
+    <section id="capabilities" class="py-40 bg-[#080808]">
         <div class="container mx-auto px-6">
-            <div id="module-grid" class="grid md:grid-cols-3 gap-8">
-                <!-- Fallback content in case JS fails -->
-                <div class="glass-card p-8 rounded-3xl space-y-6">
-                    <h4 class="text-xl font-black uppercase">POS Terminal</h4>
-                    <p class="text-sm text-white/30">Industrial precision checkout with zero-latency local processing.</p>
+            <div class="grid md:grid-cols-3 gap-12">
+                <div class="glass-card p-12 rounded-[4.5rem] space-y-10 group reveal">
+                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Sales Screen.png" class="rounded-[2.5rem] border border-white/5 transition-all duration-700 group-hover:scale-110 shadow-xl" alt="Sales">
+                    <div class="space-y-4">
+                        <h4 class="text-2xl font-black uppercase flex items-center gap-4"><i data-lucide="shopping-bag" class="text-emerald-500"></i> POS Engine</h4>
+                        <p class="text-sm text-white/30 leading-relaxed font-medium">Precision checkout logic with integrated split-payment and loyalty calculation.</p>
+                    </div>
                 </div>
-                <div class="glass-card p-8 rounded-3xl space-y-6">
-                    <h4 class="text-xl font-black uppercase">Smart Agenda</h4>
-                    <p class="text-sm text-white/30">Tactile scheduling architecture optimized for high-volume salons.</p>
+                <div class="glass-card p-12 rounded-[4.5rem] space-y-10 group reveal">
+                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Agenda.png" class="rounded-[2.5rem] border border-white/5 transition-all duration-700 group-hover:scale-110 shadow-xl" alt="Agenda">
+                    <div class="space-y-4">
+                        <h4 class="text-2xl font-black uppercase flex items-center gap-4"><i data-lucide="calendar" class="text-emerald-500"></i> Smart Agenda</h4>
+                        <p class="text-sm text-white/30 leading-relaxed font-medium">Intuitive columned scheduling mirroring physical salon registers for seamless flow.</p>
+                    </div>
                 </div>
-                <div class="glass-card p-8 rounded-3xl space-y-6">
-                    <h4 class="text-xl font-black uppercase">Compliance</h4>
-                    <p class="text-sm text-white/30">Automated VAT tax invoices built to SARS auditing standards.</p>
+                <div class="glass-card p-12 rounded-[4.5rem] space-y-10 group reveal">
+                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/sars.png" class="rounded-[2.5rem] border border-white/5 transition-all duration-700 group-hover:scale-110 shadow-xl" alt="SARS">
+                    <div class="space-y-4">
+                        <h4 class="text-2xl font-black uppercase flex items-center gap-4"><i data-lucide="file-check" class="text-emerald-500"></i> Compliance</h4>
+                        <p class="text-sm text-white/30 leading-relaxed font-medium">Automated VAT invoices and sequential logging built to official SARS standards.</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact -->
-    <section id="contact" class="py-32 bg-black">
-        <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto glass p-8 md:p-16 rounded-[4rem] border-emerald-500/10">
-                <div class="text-center mb-12">
-                    <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">Initialize <span class="text-emerald-500">Access.</span></h2>
-                    <p class="text-white/40">Enter the IsaacsPOS ecosystem.</p>
+    <!-- Deployment -->
+    <section id="download" class="py-40 bg-black relative">
+        <div class="container mx-auto px-6 text-center relative z-10 reveal">
+            <h2 class="text-6xl md:text-9xl font-black uppercase tracking-tighter mb-20 leading-none">Matrix <span class="gradient-text">Deployment</span></h2>
+            <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16">
+                <div class="glass p-16 rounded-[6rem] space-y-12 transition-all hover:border-emerald-500/40">
+                    <div class="w-28 h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="monitor" class="w-14 h-14"></i></div>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl font-black uppercase">Terminal Node</h3>
+                        <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Windows NT Architecture</p>
+                    </div>
+                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Setup.exe" class="block w-full py-8 bg-white text-black rounded-[2.5rem] font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 hover:text-white transition-all">Download .EXE Build</a>
                 </div>
-                <form action="https://formspree.io/f/xvzbonej" method="POST" class="grid gap-6">
-                    <input name="Business" required placeholder="Salon Name" class="w-full p-5 bg-black border border-white/5 rounded-2xl outline-none focus:border-emerald-500 text-white font-bold" />
-                    <input name="Email" type="email" required placeholder="Admin Email" class="w-full p-5 bg-black border border-white/5 rounded-2xl outline-none focus:border-emerald-500 text-white font-bold" />
-                    <textarea name="Message" required placeholder="How can we help?" class="w-full p-5 bg-black border border-white/5 rounded-2xl h-32 resize-none outline-none focus:border-emerald-500 text-white font-bold"></textarea>
-                    <button type="submit" class="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-widest text-xs rounded-2xl transition-all shadow-xl">Send Request</button>
-                </form>
+                <div class="glass p-16 rounded-[6rem] space-y-12 transition-all hover:border-emerald-500/40">
+                    <div class="w-28 h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="smartphone" class="w-14 h-14"></i></div>
+                    <div class="space-y-4">
+                        <h3 class="text-3xl font-black uppercase">Mobile Kiosk</h3>
+                        <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Android Client Registry</p>
+                    </div>
+                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Kiosk.apk" class="block w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">Download .APK Package</a>
+                </div>
             </div>
         </div>
     </section>
 
-    <footer class="py-12 bg-black border-t border-white/5 text-center opacity-20 text-[8px] font-black uppercase tracking-widest">
-        <p>© 2026 Isaacs & Partners Pty(Ltd). Enterprise Build.</p>
+    <!-- Lead Form -->
+    <section id="contact" class="py-40 bg-[#080808]">
+        <div class="container mx-auto px-6 reveal">
+            <div class="max-w-6xl mx-auto glass p-12 md:p-24 rounded-[7rem] border-emerald-500/10">
+                <div class="grid lg:grid-cols-2 gap-24">
+                    <div class="space-y-12">
+                        <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none">Initialize <br/><span class="text-emerald-500">Access.</span></h2>
+                        <p class="text-xl text-white/40 leading-relaxed font-medium">Join our global network of professional salons. Our specialists will architect your migration path.</p>
+                        <div class="space-y-8">
+                            <div class="flex items-center gap-8 group">
+                                <div class="w-16 h-16 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-black transition-all border border-emerald-500/20"><i data-lucide="mail"></i></div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">Secure Email</span>
+                                    <span class="text-lg font-black uppercase text-white/80">support@isaacsandpartners.online</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-black/40 p-12 rounded-[5rem] border border-white/5">
+                        <form action="https://formspree.io/f/xvzbonej" method="POST" class="grid gap-8">
+                            <div class="space-y-2">
+                                <label class="text-[9px] font-black uppercase tracking-[0.6em] text-white/30 ml-4">Identity</label>
+                                <input name="Business" required placeholder="Salon Name" class="w-full p-7 bg-black border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[9px] font-black uppercase tracking-[0.6em] text-white/30 ml-4">Gateway</label>
+                                <input name="Email" type="email" required placeholder="Admin Email" class="w-full p-7 bg-black border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-[9px] font-black uppercase tracking-[0.6em] text-white/30 ml-4">Inquiry</label>
+                                <textarea name="Message" required placeholder="Consultation Details..." class="w-full p-7 bg-black border border-white/5 rounded-3xl h-44 resize-none outline-none focus:border-emerald-500 text-white font-bold transition-all"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-8 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-[0.4em] text-xs rounded-3xl transition-all shadow-2xl active:scale-95 transform">Send Request</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-24 bg-black border-t border-white/5">
+        <div class="container mx-auto px-8 text-center md:text-left opacity-30 text-[9px] font-black uppercase tracking-[0.6em]">
+            <p>© 2026 Isaacs & Partners Pty(Ltd). All rights reserved.</p>
+        </div>
     </footer>
 
-    <!-- Scripts (Bottom for performance and reliability) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.152.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <script>
-        // Check for Library Load
-        if (typeof THREE === 'undefined') {
-            console.error('Three.js failed to load. Check internet connection.');
-        }
+        // Emergency Fallback: If Three or GSAP fail, force the site to be visible
+        const safeModeTimeout = setTimeout(() => {
+            document.body.classList.add('safe-mode');
+            console.warn("Animations took too long to load. Activating Safe Visibility Mode.");
+        }, 3000);
 
         lucide.createIcons();
 
-        // 1. Particle Background
+        const GITHACK_URL = "https://raw.githack.com/maliq273/isaacspos-website/main/";
+        const screenshots = [
+            { src: GITHACK_URL + "Sales Screen.png", label: "Industrial POS Engine" },
+            { src: GITHACK_URL + "Agenda.png", label: "Smart Scheduling Grid" },
+            { src: GITHACK_URL + "CRM.png", label: "Technical Client Vault" },
+            { src: GITHACK_URL + "Customer Portal.png", label: "Self-Service Interface" },
+            { src: GITHACK_URL + "Reports.png", label: "Analytical Data Hub" },
+            { src: GITHACK_URL + "Admin.png", label: "System Control Panel" },
+            { src: GITHACK_URL + "Inventory.png", label: "Catalog Management" },
+            { src: GITHACK_URL + "Gemini broadcast.png", label: "WhatsApp Marketing AI" },
+            { src: GITHACK_URL + "sars.png", label: "Fiscal Compliance Module" },
+            { src: GITHACK_URL + "Security.png", label: "Audit Log Integrity" }
+        ];
+
         const initHero = () => {
+            if (typeof THREE === 'undefined') return;
             const canvas = document.getElementById('hero-canvas');
-            if(!canvas) return;
+            if (!canvas) return;
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
             const geo = new THREE.BufferGeometry();
-            const pos = new Float32Array(3000 * 3);
-            for(let i=0; i<3000*3; i++) pos[i] = (Math.random() - 0.5) * 20;
+            const count = 4000;
+            const pos = new Float32Array(count * 3);
+            for(let i=0; i<count*3; i++) pos[i] = (Math.random() - 0.5) * 25;
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            const mat = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.5 });
-            const points = new THREE.Points(geo, mat);
-            scene.add(points);
-            camera.position.z = 8;
+            const mat = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.7 });
+            const mesh = new THREE.Points(geo, mat);
+            scene.add(mesh);
+            camera.position.z = 10;
 
-            const anim = () => {
-                requestAnimationFrame(anim);
-                points.rotation.y += 0.0005;
+            const animate = () => {
+                requestAnimationFrame(animate);
+                mesh.rotation.y += 0.0004;
+                mesh.rotation.x += 0.0001;
                 renderer.render(scene, camera);
             };
-            anim();
+            animate();
             window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+                camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             });
         };
 
-        // 2. 3D Showcase
         const initShowcase = () => {
+            if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
+                // In some versions OrbitControls might be global. In others attached to THREE.
+                if (typeof OrbitControls === 'undefined') return;
+            }
             const canvas = document.getElementById('showcase-canvas');
-            if(!canvas) return;
+            if (!canvas) return;
+
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(45, canvas.clientWidth/canvas.clientHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            const camera = new THREE.PerspectiveCamera(40, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            // Support for different OrbitControls import styles
+            const ControlClass = THREE.OrbitControls || OrbitControls;
+            const controls = new ControlClass(camera, renderer.domElement);
             controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enablePan = false;
             controls.autoRotate = true;
-            controls.autoRotateSpeed = 1.0;
-            controls.enableZoom = false;
-            camera.position.z = 10;
+            controls.autoRotateSpeed = 0.6;
+            controls.minDistance = 7;
+            controls.maxDistance = 15;
+            camera.position.set(0, 0, 11);
 
-            const lights = [new THREE.AmbientLight(0xffffff, 1.5), new THREE.DirectionalLight(0xffffff, 1)];
-            lights[1].position.set(5,5,5);
-            lights.forEach(l => scene.add(l));
-
-            const GITHACK = "https://raw.githack.com/maliq273/isaacspos-website/main/";
-            const items = [
-                { img: "Sales Screen.png", label: "POS Engine" },
-                { img: "Agenda.png", label: "Smart Agenda" },
-                { img: "CRM.png", label: "Client Vault" },
-                { img: "Reports.png", label: "Analytics" },
-                { img: "sars.png", label: "SARS Compliance" }
-            ];
+            scene.add(new THREE.AmbientLight(0xffffff, 1.8));
+            const dl = new THREE.DirectionalLight(0xffffff, 1);
+            dl.position.set(5, 5, 5);
+            scene.add(dl);
 
             const cards = [];
+            const radius = 8.5;
+            const labelEl = document.getElementById('carousel-label');
             const texLoader = new THREE.TextureLoader();
             texLoader.setCrossOrigin('anonymous');
 
-            items.forEach((item, i) => {
-                // Default Glass Plate (Visible immediately)
-                const mat = new THREE.MeshStandardMaterial({ 
-                    color: 0x10b981, 
-                    metalness: 0.8, 
-                    roughness: 0.2, 
-                    transparent: true, 
-                    opacity: 0.2,
-                    side: THREE.DoubleSide
-                });
-                
-                const card = new THREE.Mesh(new THREE.BoxGeometry(4, 2.5, 0.1), mat);
-                const angle = (i / items.length) * Math.PI * 2;
-                card.position.set(Math.cos(angle) * 7, 0, Math.sin(angle) * 7);
-                card.lookAt(0, 0, 0);
-                card.userData = { label: item.label };
-                scene.add(card);
-                cards.push(card);
-
-                // Try upgrading to texture
-                texLoader.load(GITHACK + item.img, (tex) => {
-                    mat.map = tex;
-                    mat.opacity = 1;
-                    mat.color.set(0xffffff);
-                    mat.needsUpdate = true;
+            let loadedCount = 0;
+            screenshots.forEach((item, i) => {
+                texLoader.load(item.src, (tex) => {
+                    const mat = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.4, roughness: 0.3, emissive: 0x10b981, emissiveIntensity: 0.02 });
+                    const card = new THREE.Mesh(new THREE.BoxGeometry(4.6, 2.9, 0.15), mat);
+                    const angle = (i / screenshots.length) * Math.PI * 2;
+                    card.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 1.8, Math.sin(angle) * radius);
+                    card.lookAt(0, 0, 0);
+                    card.userData = { label: item.label };
+                    scene.add(card);
+                    cards.push(card);
+                    loadedCount++;
+                    if (loadedCount === 1 && labelEl) labelEl.textContent = item.label;
+                }, undefined, () => {
+                    const fallbackMat = new THREE.MeshStandardMaterial({ color: 0x050505, emissive: 0x10b981, emissiveIntensity: 0.4, wireframe: true });
+                    const card = new THREE.Mesh(new THREE.BoxGeometry(4.6, 2.9, 0.1), fallbackMat);
+                    const angle = (i / screenshots.length) * Math.PI * 2;
+                    card.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+                    card.lookAt(0, 0, 0);
+                    card.userData = { label: item.label };
+                    scene.add(card);
+                    cards.push(card);
                 });
             });
 
-            const label = document.getElementById('carousel-label');
-            const ray = new THREE.Raycaster();
+            const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
 
-            canvas.addEventListener('mousemove', (e) => {
-                const r = canvas.getBoundingClientRect();
-                mouse.x = ((e.clientX - r.left) / canvas.clientWidth) * 2 - 1;
-                mouse.y = -((e.clientY - r.top) / canvas.clientHeight) * 2 + 1;
-            });
+            const onMove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / canvas.clientWidth) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / canvas.clientHeight) * 2 + 1;
+            };
+            canvas.addEventListener('mousemove', onMove);
 
-            const anim = () => {
-                requestAnimationFrame(anim);
-                controls.update();
-                ray.setFromCamera(mouse, camera);
-                const hits = ray.intersectObjects(cards);
-                if(hits.length > 0) {
-                    label.textContent = hits[0].object.userData.label;
-                    label.style.color = "#10b981";
-                } else {
-                    label.style.color = "#ffffff";
+            const animate = () => {
+                requestAnimationFrame(animate);
+                cards.forEach((c, i) => { c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.0025; });
+                raycaster.setFromCamera(mouse, camera);
+                const hits = raycaster.intersectObjects(cards);
+                if (hits.length > 0 && labelEl) {
+                    labelEl.textContent = hits[0].object.userData.label;
+                    labelEl.classList.add('text-emerald-400');
+                    document.body.style.cursor = 'pointer';
+                } else if (labelEl) {
+                    labelEl.classList.remove('text-emerald-400');
+                    document.body.style.cursor = 'default';
                 }
+                controls.update();
                 renderer.render(scene, camera);
             };
-            anim();
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = canvas.clientWidth / canvas.clientHeight; camera.updateProjectionMatrix();
+                renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+            });
         };
 
         const initGSAP = () => {
-            if (typeof gsap === 'undefined') return;
+            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
             gsap.registerPlugin(ScrollTrigger);
             gsap.utils.toArray('.reveal').forEach(el => {
-                gsap.fromTo(el, { opacity: 0, y: 30 }, { 
+                gsap.to(el, { 
                     opacity: 1, 
                     y: 0, 
-                    duration: 1.2, 
-                    scrollTrigger: { trigger: el, start: "top 85%" } 
+                    duration: 1.5, 
+                    ease: "expo.out", 
+                    scrollTrigger: { trigger: el, start: "top 90%" } 
                 });
             });
+            // Clear the safety timeout if GSAP works
+            clearTimeout(safeModeTimeout);
         };
 
-        window.onload = () => {
+        window.addEventListener('DOMContentLoaded', () => {
             initHero();
             initShowcase();
             initGSAP();
-        };
+        });
     </script>
 </body>
 </html>

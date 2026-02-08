@@ -69,6 +69,7 @@
             width: 100%;
             height: 700px;
             position: relative;
+            background: radial-gradient(circle at center, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
         }
 
         #showcase-canvas {
@@ -104,16 +105,13 @@
 
         .reveal { opacity: 0; transform: translateY(30px); }
 
-        #notification-host {
-            position: fixed;
-            bottom: 32px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9999;
-        }
-
         input, textarea { cursor: text !important; }
         button, a, label { cursor: pointer !important; }
+        
+        @media (max-width: 768px) {
+            .showcase-container { height: 500px; }
+            h1 { font-size: 3.5rem !important; }
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-emerald-500 selection:text-black">
@@ -217,25 +215,25 @@
     <section id="showcase" class="py-40 bg-black overflow-hidden">
         <div class="container mx-auto px-6 text-center mb-24 reveal">
             <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">Interface <span class="text-emerald-500">Matrix</span></h2>
-            <p class="text-white/30 font-black uppercase tracking-[0.6em] text-[10px]">Real-time high-fidelity viewport</p>
+            <p class="text-white/30 font-black uppercase tracking-[0.6em] text-[10px]">Real-time high-fidelity interactive viewport</p>
         </div>
         <div class="container mx-auto px-6 max-w-7xl reveal">
-            <div class="glass p-8 rounded-[6rem] border-white/5 relative overflow-hidden group shadow-2xl">
+            <div class="glass p-4 md:p-8 rounded-[4rem] md:rounded-[6rem] border-white/5 relative overflow-hidden group shadow-2xl">
                 <div class="showcase-container">
                     <canvas id="showcase-canvas"></canvas>
                 </div>
-                <div class="absolute top-12 left-12 p-8 glass rounded-[3rem] border-emerald-500/20 z-20 pointer-events-none transition-all group-hover:border-emerald-500/60">
-                    <div class="flex items-center gap-4 mb-4">
+                <div class="absolute top-8 left-8 md:top-12 md:left-12 p-6 md:p-8 glass rounded-[2.5rem] md:rounded-[3rem] border-emerald-500/20 z-20 pointer-events-none transition-all group-hover:border-emerald-500/60">
+                    <div class="flex items-center gap-4 mb-3 md:mb-4">
                         <div class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
-                        <span class="text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400">Tactile Viewport</span>
+                        <span class="text-[10px] md:text-[11px] font-black uppercase tracking-[0.5em] text-emerald-400">Tactile Viewport</span>
                     </div>
-                    <p id="carousel-label" class="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white">System Standby...</p>
+                    <p id="carousel-label" class="text-xl md:text-3xl font-black uppercase tracking-tighter text-white">Initializing Hub...</p>
                 </div>
-                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-6 z-20">
-                    <div class="px-10 py-5 glass rounded-full text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-white/5 transition-all">
+                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-4 md:gap-6 z-20 w-full px-4">
+                    <div class="px-6 md:px-10 py-3 md:py-5 glass rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-white/5 transition-all">
                         <i data-lucide="mouse-pointer-2" class="w-4 h-4 text-emerald-500"></i> Rotate
                     </div>
-                    <div class="px-10 py-5 glass rounded-full text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-white/5 transition-all">
+                    <div class="px-6 md:px-10 py-3 md:py-5 glass rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-4 hover:bg-white/5 transition-all">
                         <i data-lucide="zoom-in" class="w-4 h-4 text-emerald-500"></i> Zoom
                     </div>
                 </div>
@@ -243,31 +241,11 @@
         </div>
     </section>
 
-    <!-- Capabilities -->
+    <!-- Capabilities Grid -->
     <section id="capabilities" class="py-40 bg-[#080808]">
         <div class="container mx-auto px-6">
-            <div class="grid md:grid-cols-3 gap-12">
-                <div class="glass-card p-12 rounded-[4.5rem] space-y-10 group reveal">
-                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Sales Screen.png" class="rounded-[2.5rem] border border-white/5 transition-all duration-700 group-hover:scale-110 shadow-xl" alt="Sales">
-                    <div class="space-y-4">
-                        <h4 class="text-2xl font-black uppercase flex items-center gap-4"><i data-lucide="shopping-bag" class="text-emerald-500"></i> POS Engine</h4>
-                        <p class="text-sm text-white/30 leading-relaxed font-medium">Precision checkout logic with integrated split-payment and loyalty calculation.</p>
-                    </div>
-                </div>
-                <div class="glass-card p-12 rounded-[4.5rem] space-y-10 group reveal">
-                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Agenda.png" class="rounded-[2.5rem] border border-white/5 transition-all duration-700 group-hover:scale-110 shadow-xl" alt="Agenda">
-                    <div class="space-y-4">
-                        <h4 class="text-2xl font-black uppercase flex items-center gap-4"><i data-lucide="calendar" class="text-emerald-500"></i> Smart Agenda</h4>
-                        <p class="text-sm text-white/30 leading-relaxed font-medium">Intuitive columned scheduling mirroring physical salon registers for seamless flow.</p>
-                    </div>
-                </div>
-                <div class="glass-card p-12 rounded-[4.5rem] space-y-10 group reveal">
-                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/sars.png" class="rounded-[2.5rem] border border-white/5 transition-all duration-700 group-hover:scale-110 shadow-xl" alt="SARS">
-                    <div class="space-y-4">
-                        <h4 class="text-2xl font-black uppercase flex items-center gap-4"><i data-lucide="file-check" class="text-emerald-500"></i> Compliance</h4>
-                        <p class="text-sm text-white/30 leading-relaxed font-medium">Automated VAT invoices and sequential logging built to official SARS standards.</p>
-                    </div>
-                </div>
+            <div id="module-grid" class="grid md:grid-cols-3 gap-12">
+                <!-- Modules will be injected by JS -->
             </div>
         </div>
     </section>
@@ -277,18 +255,18 @@
         <div class="container mx-auto px-6 text-center relative z-10 reveal">
             <h2 class="text-6xl md:text-9xl font-black uppercase tracking-tighter mb-20 leading-none">Matrix <span class="gradient-text">Deployment</span></h2>
             <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16">
-                <div class="glass p-16 rounded-[6rem] space-y-12 transition-all hover:border-emerald-500/40">
-                    <div class="w-28 h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="monitor" class="w-14 h-14"></i></div>
+                <div class="glass p-12 md:p-16 rounded-[4rem] md:rounded-[6rem] space-y-12 transition-all hover:border-emerald-500/40">
+                    <div class="w-24 h-24 md:w-28 md:h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="monitor" class="w-12 h-12 md:w-14 md:h-14"></i></div>
                     <div class="space-y-4">
-                        <h3 class="text-3xl font-black uppercase">Terminal Node</h3>
-                        <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Windows NT Architecture</p>
+                        <h3 class="text-2xl md:text-3xl font-black uppercase">Terminal Node</h3>
+                        <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Windows Desktop Build</p>
                     </div>
                     <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Setup.exe" class="block w-full py-8 bg-white text-black rounded-[2.5rem] font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 hover:text-white transition-all">Download .EXE Build</a>
                 </div>
-                <div class="glass p-16 rounded-[6rem] space-y-12 transition-all hover:border-emerald-500/40">
-                    <div class="w-28 h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="smartphone" class="w-14 h-14"></i></div>
+                <div class="glass p-12 md:p-16 rounded-[4rem] md:rounded-[6rem] space-y-12 transition-all hover:border-emerald-500/40">
+                    <div class="w-24 h-24 md:w-28 md:h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="smartphone" class="w-12 h-12 md:w-14 md:h-14"></i></div>
                     <div class="space-y-4">
-                        <h3 class="text-3xl font-black uppercase">Mobile Kiosk</h3>
+                        <h3 class="text-2xl md:text-3xl font-black uppercase">Mobile Kiosk</h3>
                         <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Android Client Registry</p>
                     </div>
                     <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Kiosk.apk" class="block w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">Download .APK Package</a>
@@ -300,36 +278,36 @@
     <!-- Lead Form -->
     <section id="contact" class="py-40 bg-[#080808]">
         <div class="container mx-auto px-6 reveal">
-            <div class="max-w-6xl mx-auto glass p-12 md:p-24 rounded-[7rem] border-emerald-500/10">
-                <div class="grid lg:grid-cols-2 gap-24">
-                    <div class="space-y-12">
+            <div class="max-w-6xl mx-auto glass p-10 md:p-24 rounded-[5rem] md:rounded-[7rem] border-emerald-500/10 shadow-3xl">
+                <div class="grid lg:grid-cols-2 gap-16 md:gap-24">
+                    <div class="space-y-10 md:space-y-12">
                         <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none">Initialize <br/><span class="text-emerald-500">Access.</span></h2>
-                        <p class="text-xl text-white/40 leading-relaxed font-medium">Join our global network of professional salons. Our specialists will architect your migration path.</p>
+                        <p class="text-xl text-white/40 leading-relaxed font-medium">Join our global network of professional salons. Our specialists will architect your migration path into the IsaacsPOS ecosystem.</p>
                         <div class="space-y-8">
-                            <div class="flex items-center gap-8 group">
-                                <div class="w-16 h-16 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-black transition-all border border-emerald-500/20"><i data-lucide="mail"></i></div>
+                            <div class="flex items-center gap-6 md:gap-8 group">
+                                <div class="w-14 h-14 md:w-16 md:h-16 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-black transition-all border border-emerald-500/20"><i data-lucide="mail"></i></div>
                                 <div class="flex flex-col">
                                     <span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">Secure Email</span>
-                                    <span class="text-lg font-black uppercase text-white/80">support@isaacsandpartners.online</span>
+                                    <span class="text-lg font-black uppercase text-white/80 tracking-tighter">support@isaacsandpartners.online</span>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="bg-black/40 p-12 rounded-[5rem] border border-white/5">
+                    <div class="bg-black/40 p-8 md:p-12 rounded-[3.5rem] md:rounded-[5rem] border border-white/5">
                         <form action="https://formspree.io/f/xvzbonej" method="POST" class="grid gap-8">
                             <div class="space-y-2">
                                 <label class="text-[9px] font-black uppercase tracking-[0.6em] text-white/30 ml-4">Identity</label>
-                                <input name="Business" required placeholder="Salon Name" class="w-full p-7 bg-black border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
+                                <input name="Business" required placeholder="Salon Name" class="w-full p-6 bg-black border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[9px] font-black uppercase tracking-[0.6em] text-white/30 ml-4">Gateway</label>
-                                <input name="Email" type="email" required placeholder="Admin Email" class="w-full p-7 bg-black border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
+                                <input name="Email" type="email" required placeholder="Admin Email" class="w-full p-6 bg-black border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
                             </div>
                             <div class="space-y-2">
                                 <label class="text-[9px] font-black uppercase tracking-[0.6em] text-white/30 ml-4">Inquiry</label>
-                                <textarea name="Message" required placeholder="Consultation Details..." class="w-full p-7 bg-black border border-white/5 rounded-3xl h-44 resize-none outline-none focus:border-emerald-500 text-white font-bold transition-all"></textarea>
+                                <textarea name="Message" required placeholder="Consultation Details..." class="w-full p-6 bg-black border border-white/5 rounded-3xl h-44 resize-none outline-none focus:border-emerald-500 text-white font-bold transition-all"></textarea>
                             </div>
-                            <button type="submit" class="w-full py-8 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-[0.4em] text-xs rounded-3xl transition-all shadow-2xl active:scale-95 transform">Send Request</button>
+                            <button type="submit" class="w-full py-7 md:py-8 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-[0.4em] text-xs rounded-3xl transition-all shadow-2xl active:scale-95 transform">Send Authorization Request</button>
                         </form>
                     </div>
                 </div>
@@ -340,7 +318,7 @@
     <!-- Footer -->
     <footer class="py-24 bg-black border-t border-white/5">
         <div class="container mx-auto px-8 text-center md:text-left opacity-30 text-[9px] font-black uppercase tracking-[0.6em]">
-            <p>© 2026 Isaacs & Partners Pty(Ltd). All rights reserved.</p>
+            <p>© 2026 Isaacs & Partners Pty(Ltd). All rights reserved. V2.1.0 Stable Build.</p>
         </div>
     </footer>
 
@@ -361,9 +339,10 @@
             { src: GITHACK_URL + "Security.png", label: "Audit Log Integrity" }
         ];
 
-        // Hero Particles
+        // Particle Engine
         const initHero = () => {
             const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
@@ -371,19 +350,19 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
             const geo = new THREE.BufferGeometry();
-            const count = 4500;
+            const count = 4000;
             const pos = new Float32Array(count * 3);
             for(let i=0; i<count*3; i++) pos[i] = (Math.random() - 0.5) * 25;
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-            const mat = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.8 });
+            const mat = new THREE.PointsMaterial({ size: 0.02, color: 0x10b981, transparent: true, opacity: 0.7 });
             const mesh = new THREE.Points(geo, mat);
             scene.add(mesh);
             camera.position.z = 10;
 
             const animate = () => {
                 requestAnimationFrame(animate);
-                mesh.rotation.y += 0.0005;
-                mesh.rotation.x += 0.0002;
+                mesh.rotation.y += 0.0004;
+                mesh.rotation.x += 0.0001;
                 renderer.render(scene, camera);
             };
             animate();
@@ -393,13 +372,13 @@
             });
         };
 
-        // 3D Showcase (Hardened for Live Hosting)
+        // 3D Matrix Carousel
         const initShowcase = () => {
             const canvas = document.getElementById('showcase-canvas');
             if (!canvas) return;
 
             const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(42, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(40, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
             renderer.setSize(canvas.clientWidth, canvas.clientHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -409,44 +388,43 @@
             controls.dampingFactor = 0.05;
             controls.enablePan = false;
             controls.autoRotate = true;
-            controls.autoRotateSpeed = 0.7;
+            controls.autoRotateSpeed = 0.6;
             controls.minDistance = 7;
-            controls.maxDistance = 14;
+            controls.maxDistance = 15;
             camera.position.set(0, 0, 11);
 
-            scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.8));
             const dl = new THREE.DirectionalLight(0xffffff, 1);
             dl.position.set(5, 5, 5);
             scene.add(dl);
 
             const cards = [];
-            const radius = 8;
+            const radius = 8.5;
             const labelEl = document.getElementById('carousel-label');
             const texLoader = new THREE.TextureLoader();
-            texLoader.setCrossOrigin('anonymous'); // Critical for CORS on live domains
+            texLoader.setCrossOrigin('anonymous');
 
-            let loaded = 0;
+            let loadedCount = 0;
             screenshots.forEach((item, i) => {
                 texLoader.load(item.src, (tex) => {
                     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
                     const mat = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.4, roughness: 0.3, emissive: 0x10b981, emissiveIntensity: 0.02 });
-                    const card = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, 0.12), mat);
+                    const card = new THREE.Mesh(new THREE.BoxGeometry(4.6, 2.9, 0.15), mat);
                     const angle = (i / screenshots.length) * Math.PI * 2;
-                    card.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 1.5, Math.sin(angle) * radius);
+                    card.position.set(Math.cos(angle) * radius, (Math.random() - 0.5) * 1.8, Math.sin(angle) * radius);
                     card.lookAt(0, 0, 0);
                     card.userData = { label: item.label };
                     scene.add(card);
                     cards.push(card);
-                    loaded++;
-                    if (loaded === 1) labelEl.textContent = item.label;
-                }, undefined, (err) => {
-                    // Digital Placeholder if Texture Fails
-                    const fallbackMat = new THREE.MeshStandardMaterial({ color: 0x050505, emissive: 0x10b981, emissiveIntensity: 0.5, wireframe: true });
-                    const card = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, 0.1), fallbackMat);
+                    loadedCount++;
+                    if (loadedCount === 1) labelEl.textContent = item.label;
+                }, undefined, () => {
+                    const fallbackMat = new THREE.MeshStandardMaterial({ color: 0x050505, emissive: 0x10b981, emissiveIntensity: 0.4, wireframe: true });
+                    const card = new THREE.Mesh(new THREE.BoxGeometry(4.6, 2.9, 0.1), fallbackMat);
                     const angle = (i / screenshots.length) * Math.PI * 2;
                     card.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
                     card.lookAt(0, 0, 0);
-                    card.userData = { label: item.label + " (Preview)" };
+                    card.userData = { label: item.label + " [Loading Registry]" };
                     scene.add(card);
                     cards.push(card);
                 });
@@ -464,7 +442,7 @@
 
             const animate = () => {
                 requestAnimationFrame(animate);
-                cards.forEach((c, i) => { c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.002; });
+                cards.forEach((c, i) => { c.position.y += Math.sin(Date.now() * 0.001 + i) * 0.0025; });
                 raycaster.setFromCamera(mouse, camera);
                 const hits = raycaster.intersectObjects(cards);
                 if (hits.length > 0) {
@@ -486,13 +464,43 @@
             });
         };
 
-        const initGSAP = () => {
+        const initUI = () => {
+            const grid = document.getElementById('module-grid');
+            const modules = [
+                { img: "Sales Screen.png", title: "POS Terminal", icon: "shopping-bag", desc: "Industrial precision checkout with zero-latency local processing." },
+                { img: "Agenda.png", title: "Smart Agenda", icon: "calendar", desc: "Tactile scheduling architecture optimized for high-volume salons." },
+                { img: "sars.png", title: "Compliance", icon: "file-check", desc: "Automated VAT tax invoices built to official SARS auditing standards." }
+            ];
+
+            modules.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-10 rounded-[4rem] space-y-10 group reveal';
+                card.innerHTML = `
+                    <div class="relative overflow-hidden rounded-[2.5rem] border border-white/5 shadow-2xl">
+                        <img src="${GITHACK_URL}${m.img}" class="w-full h-auto transition-all duration-1000 group-hover:scale-110" alt="${m.title}">
+                    </div>
+                    <div class="space-y-4">
+                        <h4 class="text-2xl font-black uppercase flex items-center gap-4">
+                            <i data-lucide="${m.icon}" class="text-emerald-500 w-6 h-6"></i> ${m.title}
+                        </h4>
+                        <p class="text-sm text-white/30 leading-relaxed font-medium">${m.desc}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+
+            gsap.registerPlugin(ScrollTrigger);
             gsap.utils.toArray('.reveal').forEach(el => {
                 gsap.to(el, { opacity: 1, y: 0, duration: 1.5, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 90%" } });
             });
         };
 
-        window.addEventListener('load', () => { initHero(); initShowcase(); initGSAP(); });
+        window.addEventListener('DOMContentLoaded', () => {
+            initHero();
+            initUI();
+            initShowcase();
+        });
     </script>
 </body>
 </html>

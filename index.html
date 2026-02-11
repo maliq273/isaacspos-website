@@ -19,6 +19,8 @@
         :root {
             --emerald-glow: rgba(16, 185, 129, 0.4);
             --emerald-strong: #10b981;
+            --isi-neon: #6366f1;
+            --isi-electric: #d946ef;
             --dark-bg: #000000;
         }
 
@@ -57,10 +59,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .emerald-shadow {
-            box-shadow: 0 0 50px -10px var(--emerald-glow);
-        }
-
         #hero-canvas {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -97,8 +95,11 @@
             transform: translateY(-3px) scale(1.02);
         }
 
-        .reveal { opacity: 0; transform: translateY(40px); }
-        .safe-mode .reveal { opacity: 1 !important; transform: none !important; }
+        .reveal { 
+            opacity: 0; 
+            transform: translateY(40px) scale(0.98);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
 
         input, textarea { cursor: text !important; background: rgba(0,0,0,0.5) !important; }
         button, a, label { cursor: pointer !important; }
@@ -121,6 +122,81 @@
             50% { transform: translateY(-15px); }
         }
         .animate-float { animation: float 6s ease-in-out infinite; }
+
+        .training-viewport {
+            width: 100%;
+            height: 80vh;
+            background: #111;
+            border-radius: 3rem;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        /* Funky ISI Intelligence Stylings */
+        .isi-special-section {
+            background: radial-gradient(circle at bottom, #1e1b4b 0%, #000 70%);
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .isi-title-gradient {
+            background: linear-gradient(90deg, #6366f1, #d946ef, #6366f1);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .funky-isi-card {
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            backdrop-filter: blur(15px);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .funky-isi-card:hover {
+            transform: scale(1.05) rotate(1deg);
+            border-color: #d946ef;
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .isi-banner-btn {
+            background: linear-gradient(45deg, #6366f1, #d946ef);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+        }
+
+        .isi-banner-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 20px 40px rgba(217, 70, 239, 0.4);
+            filter: brightness(1.1);
+        }
+
+        .spiky-glow {
+            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6)) drop-shadow(0 0 30px rgba(217, 70, 239, 0.3));
+        }
+
+        .isi-floating-logo {
+            animation: float-isi 8s ease-in-out infinite;
+        }
+
+        @keyframes float-isi {
+            0%, 100% { transform: translateY(0) scale(1); filter: hue-rotate(0deg); }
+            50% { transform: translateY(-20px) scale(1.05); filter: hue-rotate(15deg); }
+        }
+
+        #notification-host {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-emerald-500 selection:text-black">
@@ -131,16 +207,17 @@
             <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform shadow-lg shadow-emerald-500/20">
                 <span class="text-2xl font-black italic text-white">I</span>
             </div>
-            <div class="flex flex-col">
+            <div class="flex flex-col text-left">
                 <span class="text-xl font-black tracking-tighter uppercase leading-none">IsaacsPOS</span>
                 <span class="text-[9px] font-bold text-emerald-500 tracking-[0.4em] uppercase">Enterprise V2.1</span>
             </div>
         </div>
         <div class="hidden lg:flex gap-10 text-[10px] font-black uppercase tracking-[0.2em] text-white/40">
             <a href="#about" class="nav-link">Logic</a>
-            <a href="#showcase" class="nav-link">Experience</a>
-            <a href="#capabilities" class="nav-link">Capabilities</a>
-            <a href="#security" class="nav-link">Security</a>
+            <a href="#showcase" class="nav-link">Matrix</a>
+            <a href="#gallery" class="nav-link">Interface</a>
+            <a href="#training" class="nav-link">Academy</a>
+            <a href="#isi-intelligence" class="nav-link">ISI Pro</a>
             <a href="#download" class="nav-link">Deploy</a>
         </div>
         <div class="flex items-center gap-6">
@@ -153,63 +230,35 @@
     <!-- Hero -->
     <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         <canvas id="hero-canvas"></canvas>
-        <div class="container mx-auto px-6 relative z-10 text-center">
+        <div class="container mx-auto px-6 relative z-10 text-center reveal">
             <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full glass border-emerald-500/30 text-[9px] font-black tracking-[0.4em] text-emerald-400 uppercase mb-12 animate-pulse">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981]"></span>
-                Next-Gen Industrial Architecture
+                Industrial Grade POS Architecture
             </div>
             <h1 class="text-6xl md:text-9xl font-black tracking-tighter mb-8 leading-[0.85]">
                 Intelligent <br/>
                 <span class="gradient-text">Business Mastery</span>
             </h1>
             <p class="text-lg md:text-2xl text-white/50 max-w-4xl mx-auto font-medium leading-relaxed mb-16 px-4">
-                Local-First performance meeting Cloud-Sync intelligence. <br class="hidden md:block" />
-                Experience absolute data sovereignty with our proprietary SQLite Master Node architecture.
+                Local-First speed meeting Cloud-Sync intelligence. <br class="hidden md:block" />
+                Experience 100% uptime with our proprietary SQLite Master Node architecture.
             </p>
             <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <a href="#contact" class="px-12 py-6 btn-primary text-black rounded-2xl font-black uppercase text-xs tracking-[0.3em]">
                     Book Private Demo
                 </a>
-                <a href="#download" class="px-12 py-6 glass border-white/10 hover:bg-white/5 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3">
-                    <i data-lucide="cpu" class="w-4 h-4 text-emerald-500"></i> Deploy Terminal
+                <a href="#isi-intelligence" class="px-12 py-6 glass border-white/10 hover:bg-white/5 text-white rounded-2xl font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3">
+                    <i data-lucide="zap" class="w-4 h-4 text-indigo-400"></i> Explore ISI
                 </a>
             </div>
         </div>
-        <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-20">
-            <span class="text-[9px] font-black uppercase tracking-[0.5em]">System Initialized</span>
-            <div class="w-px h-16 bg-gradient-to-b from-emerald-500 to-transparent"></div>
-        </div>
     </section>
 
-    <!-- Architecture Stats -->
-    <section class="py-24 bg-black border-b border-white/5">
-        <div class="container mx-auto px-6">
-            <div class="grid md:grid-cols-4 gap-12 text-center">
-                <div class="reveal">
-                    <div class="text-4xl md:text-6xl font-black text-emerald-500 mb-2">99.9%</div>
-                    <div class="text-[9px] font-black uppercase tracking-[0.5em] text-white/30">Local Uptime</div>
-                </div>
-                <div class="reveal">
-                    <div class="text-4xl md:text-6xl font-black text-emerald-500 mb-2">0ms</div>
-                    <div class="text-[9px] font-black uppercase tracking-[0.5em] text-white/30">Checkout Latency</div>
-                </div>
-                <div class="reveal">
-                    <div class="text-4xl md:text-6xl font-black text-emerald-500 mb-2">30s</div>
-                    <div class="text-[9px] font-black uppercase tracking-[0.5em] text-white/30">Disaster Recovery</div>
-                </div>
-                <div class="reveal">
-                    <div class="text-4xl md:text-6xl font-black text-emerald-500 mb-2">100%</div>
-                    <div class="text-[9px] font-black uppercase tracking-[0.5em] text-white/30">SARS Compliant</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Core Logic -->
-    <section id="about" class="py-40 relative bg-[#050505]">
+    <!-- Philosophy -->
+    <section id="about" class="py-40 relative bg-[#050505] border-y border-white/5">
         <div class="container mx-auto px-6">
             <div class="grid lg:grid-cols-2 gap-24 items-center">
-                <div class="space-y-10 reveal">
+                <div class="space-y-10 reveal text-left">
                     <div class="w-16 h-1 bg-emerald-500 rounded-full"></div>
                     <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none">
                         Local Data <br/><span class="text-emerald-500">Sovereignty.</span>
@@ -231,218 +280,127 @@
                     </div>
                 </div>
                 <div class="relative group reveal">
-                    <div class="absolute inset-0 bg-emerald-500/10 blur-[120px] rounded-full animate-pulse"></div>
-                    <img src="https://raw.githack.com/maliq273/isaacspos-website/main/Landscape.png" alt="System Overview" class="relative z-10 rounded-[4rem] border border-white/5 shadow-2xl animate-float">
+                    <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Landscape.png" alt="System Overview" class="relative z-10 rounded-[4rem] border border-white/5 shadow-2xl animate-float">
+                    <div class="absolute inset-0 bg-emerald-500/5 blur-[120px] rounded-full animate-pulse"></div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Showcase Video Viewport -->
+    <!-- Matrix Video -->
     <section id="showcase" class="py-40 bg-black">
         <div class="container mx-auto px-6 text-center mb-24 reveal">
             <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">Interface <span class="text-emerald-500">Matrix</span></h2>
-            <p class="text-white/30 font-black uppercase tracking-[0.6em] text-[10px]">Industrial Operational Flow</p>
+            <p class="text-white/30 font-black uppercase tracking-[0.6em] text-[10px]">Cinematic Operational Workflow</p>
         </div>
         <div class="container mx-auto px-6 max-w-7xl reveal">
             <div class="glass p-2 md:p-4 rounded-[4rem] md:rounded-[6rem] border-white/5 relative overflow-hidden group emerald-shadow aspect-video">
                 <div class="showcase-container rounded-[3.5rem] md:rounded-[5.5rem] overflow-hidden">
-                    <video id="showcase-video" autoplay muted loop playsinline poster="https://raw.githack.com/maliq273/isaacspos-website/main/Landscape.png">
+                    <video id="showcase-video" autoplay muted loop playsinline poster="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Landscape.png">
                         <source src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Art%20of%20Salon%20Management%201.mp4" type="video/mp4">
                     </video>
                 </div>
-                <div class="absolute top-12 left-12 p-8 glass rounded-[3rem] border-emerald-500/20 z-20 pointer-events-none transition-all group-hover:border-emerald-500/60">
-                    <div class="flex items-center gap-4 mb-3">
-                        <div class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></div>
-                        <span class="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-400">Tactile Viewport</span>
-                    </div>
-                    <p class="text-xl md:text-3xl font-black uppercase tracking-tighter text-white">Art of Salon Management</p>
-                </div>
-                <div class="absolute bottom-12 right-12 flex items-center gap-4 z-20 opacity-40 group-hover:opacity-100 transition-opacity">
-                    <span class="text-[9px] font-black uppercase tracking-[0.5em]">H-Fi 1080p Stream</span>
-                    <i data-lucide="video" class="w-5 h-5 text-emerald-500"></i>
-                </div>
             </div>
         </div>
     </section>
 
-    <!-- Master Capability Registry -->
-    <section id="capabilities" class="py-40 bg-[#050505] border-y border-white/5">
+    <!-- Module Gallery -->
+    <section id="gallery" class="py-40 bg-[#050505]">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-40 reveal">
+                <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.6em] mb-4 block">Industrial Module Catalog</span>
+                <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">Visual <br/><span class="text-emerald-500">Intelligence.</span></h2>
+            </div>
+            <div id="module-display" class="space-y-64">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Academy Academy -->
+    <section id="training" class="py-40 bg-black border-y border-white/5">
         <div class="container mx-auto px-6">
             <div class="text-center mb-24 reveal">
-                <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.6em] mb-4 block">Omni-Channel Operations</span>
-                <h2 class="text-4xl md:text-7xl font-black uppercase tracking-tighter mb-4">Master Capability <span class="text-emerald-500">Registry</span></h2>
-                <div class="w-24 h-1.5 bg-emerald-500 mx-auto rounded-full"></div>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="features-grid">
-                <!-- Features Injected via JS -->
-            </div>
-        </div>
-    </section>
-
-    <!-- Comparison: The Industry Pivot -->
-    <section id="pivot" class="py-40 bg-black">
-        <div class="container mx-auto px-6">
-            <div class="max-w-6xl mx-auto glass rounded-[5rem] p-12 md:p-24 relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-16 opacity-5 pointer-events-none">
-                    <i data-lucide="zap" class="w-64 h-64 text-white"></i>
-                </div>
-                <div class="text-center mb-20 reveal">
-                    <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-6">The Industry <span class="text-emerald-500">Pivot</span></h2>
-                    <p class="text-white/40 font-bold uppercase tracking-widest text-xs">Standard vs Legacy Systems</p>
-                </div>
-                
-                <div class="grid md:grid-cols-2 gap-16 relative z-10">
-                    <div class="space-y-8 reveal">
-                        <div class="flex items-center gap-4 text-emerald-500 mb-6">
-                            <i data-lucide="check-circle" class="w-6 h-6"></i>
-                            <h3 class="text-2xl font-black uppercase">IsaacsPOS Standard</h3>
-                        </div>
-                        <ul class="space-y-6">
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                <p class="text-sm font-bold text-white/80">Offline-First: Works during load shedding or outages.</p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                <p class="text-sm font-bold text-white/80">Data Sovereignty: You own your Master DB file.</p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                <p class="text-sm font-bold text-white/80">Zero Lag: Locally processed for instant checkout.</p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                                <p class="text-sm font-bold text-white/80">Blind Recon: Integrated daily Z-Report audit.</p>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="space-y-8 reveal opacity-30 grayscale hover:grayscale-0 transition-all hover:opacity-100">
-                        <div class="flex items-center gap-4 text-white/60 mb-6">
-                            <i data-lucide="x-circle" class="w-6 h-6"></i>
-                            <h3 class="text-2xl font-black uppercase">Legacy Cloud POS</h3>
-                        </div>
-                        <ul class="space-y-6">
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/40"></div>
-                                <p class="text-sm font-bold">Stops working if internet drops or slows.</p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/40"></div>
-                                <p class="text-sm font-bold">Third-party servers own your client history.</p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/40"></div>
-                                <p class="text-sm font-bold">Latency during peak hours affects service speed.</p>
-                            </li>
-                            <li class="flex items-start gap-4">
-                                <div class="mt-1.5 w-1.5 h-1.5 rounded-full bg-white/40"></div>
-                                <p class="text-sm font-bold">Manual reconciliation prone to human error.</p>
-                            </li>
-                        </ul>
+                <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.6em] mb-4 block">Onboarding Hub</span>
+                <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter mb-6">Staff <span class="text-emerald-500">Academy.</span></h2>
+                <div class="max-w-7xl mx-auto reveal mt-12">
+                    <div class="training-viewport glass relative group">
+                        <iframe src="https://view.officeapps.live.com/op/view.aspx?src=https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Welcome-to-Your-IsaacsPOS-V21-Training-Program.pptx" width="100%" height="100%" frameborder="0"></iframe>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Security Vault -->
-    <section id="security" class="py-40 bg-[#050505] relative overflow-hidden">
-        <div class="container mx-auto px-6">
-            <div class="grid lg:grid-cols-2 gap-24 items-center">
-                <div class="order-2 lg:order-1 reveal">
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="glass-card p-10 rounded-[3rem] border-emerald-500/10">
-                            <i data-lucide="shield-check" class="text-emerald-500 mb-6 w-10 h-10"></i>
-                            <h5 class="font-black text-xs uppercase tracking-widest mb-3">AES-256 Encryption</h5>
-                            <p class="text-[11px] text-white/30 font-bold leading-relaxed">Local records are encrypted with military-grade protocols for absolute privacy.</p>
-                        </div>
-                        <div class="glass-card p-10 rounded-[3rem] mt-12">
-                            <i data-lucide="lock" class="text-white/40 mb-6 w-10 h-10"></i>
-                            <h5 class="font-black text-xs uppercase tracking-widest mb-3">3-Tier Permissions</h5>
-                            <p class="text-[11px] text-white/30 font-bold leading-relaxed">Separate access hierarchies for Admin, Manager, and Stylist roles.</p>
-                        </div>
-                        <div class="glass-card p-10 rounded-[3rem]">
-                            <i data-lucide="file-text" class="text-white/40 mb-6 w-10 h-10"></i>
-                            <h5 class="font-black text-xs uppercase tracking-widest mb-3">SARS Compliant</h5>
-                            <p class="text-[11px] text-white/30 font-bold leading-relaxed">Automated Tax Invoices with hard-coded registration and sequential logging.</p>
-                        </div>
-                        <div class="glass-card p-10 rounded-[3rem] border-emerald-500/10 mt-12">
-                            <i data-lucide="hard-drive" class="text-emerald-500 mb-6 w-10 h-10"></i>
-                            <h5 class="font-black text-xs uppercase tracking-widest mb-3">Master DB Recovery</h5>
-                            <p class="text-[11px] text-white/30 font-bold leading-relaxed">Disaster recovery in under 30 seconds via encrypted physical USB backup files.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="order-1 lg:order-2 space-y-10 reveal">
-                    <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">Enterprise Integrity</span>
-                    <h2 class="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none">Unmatched <br/><span class="text-emerald-500">Security Vault</span></h2>
-                    <p class="text-xl text-white/50 leading-relaxed font-medium">
-                        We believe business continuity is a human right. IsaacsPOS is engineered for absolute reliability, ensuring your financial logs remain immutable and your business stays open during outages.
-                    </p>
-                    <ul class="space-y-4">
-                        <li class="flex items-center gap-4">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></div>
-                            <span class="text-xs font-bold uppercase tracking-[0.3em] text-white/60">Sequential SARS-Compliant Invoicing</span>
-                        </li>
-                        <li class="flex items-center gap-4">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]"></div>
-                            <span class="text-xs font-bold uppercase tracking-[0.3em] text-white/60">Stylist PIN Digital Signatures</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Deployment Matrix -->
+    <!-- Deployment -->
     <section id="download" class="py-40 bg-black relative">
         <div class="container mx-auto px-6 text-center reveal">
             <h2 class="text-6xl md:text-9xl font-black uppercase tracking-tighter mb-20 leading-none">Matrix <span class="gradient-text">Deployment</span></h2>
-            <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16">
+            <div class="max-w-5xl mx-auto grid md:grid-cols-2 gap-16 text-left">
                 <div class="glass-card p-16 rounded-[6rem] space-y-12">
                     <div class="w-28 h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="monitor" class="w-14 h-14"></i></div>
-                    <div class="space-y-4">
-                        <h3 class="text-3xl font-black uppercase">Terminal Node</h3>
-                        <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Windows NT Framework</p>
-                    </div>
-                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Setup.exe" class="block w-full py-8 bg-white text-black rounded-[2.5rem] font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 hover:text-white transition-all">Download .EXE Build</a>
+                    <h3 class="text-3xl font-black uppercase text-center">Terminal Node</h3>
+                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Setup.exe" class="block w-full py-8 bg-white text-black rounded-[2.5rem] font-black text-center uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">Download .EXE</a>
                 </div>
                 <div class="glass-card p-16 rounded-[6rem] space-y-12">
                     <div class="w-28 h-28 bg-white/5 rounded-[3rem] flex items-center justify-center mx-auto text-emerald-500"><i data-lucide="smartphone" class="w-14 h-14"></i></div>
-                    <div class="space-y-4">
-                        <h3 class="text-3xl font-black uppercase">Mobile Kiosk</h3>
-                        <p class="text-[11px] font-black tracking-[0.6em] text-white/20 uppercase">Android Client APK</p>
-                    </div>
-                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Kiosk.apk" class="block w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">Download .APK Client</a>
+                    <h3 class="text-3xl font-black uppercase text-center">Mobile Kiosk</h3>
+                    <a href="https://github.com/maliq273/maliq273.github.io/releases/download/IsaacsPOS-v2.1/IsaacsPOS_Kiosk.apk" class="block w-full py-8 bg-emerald-600 text-white rounded-[2.5rem] font-black text-center uppercase text-xs tracking-widest shadow-2xl hover:bg-emerald-500 transition-all">Download .APK</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Contact Form -->
+    <!-- Contact Form (Initialize Access) -->
     <section id="contact" class="py-40 bg-[#050505]">
         <div class="container mx-auto px-6 reveal">
-            <div class="max-w-6xl mx-auto glass p-12 md:p-24 rounded-[7rem] border-emerald-500/10 shadow-3xl">
-                <div class="grid lg:grid-cols-2 gap-24">
+            <div class="max-w-6xl mx-auto glass p-12 md:p-24 rounded-[7rem] border-emerald-500/10">
+                <div class="grid lg:grid-cols-2 gap-24 text-left">
                     <div class="space-y-12">
                         <h2 class="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none">Initialize <br/><span class="text-emerald-500">Access.</span></h2>
-                        <p class="text-xl text-white/40 leading-relaxed font-medium">Join our global network of professional salons. Our specialists will architect your migration path into the IsaacsPOS ecosystem.</p>
-                        <div class="space-y-8">
-                            <div class="flex items-center gap-8 group">
-                                <div class="w-16 h-16 bg-emerald-600/10 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-600 group-hover:text-black transition-all border border-emerald-500/20"><i data-lucide="mail"></i></div>
-                                <div class="flex flex-col">
-                                    <span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">Authorized Gateway</span>
-                                    <span class="text-lg font-black uppercase text-white/80">support@isaacsandpartners.online</span>
+                        <p class="text-xl text-white/40 leading-relaxed font-medium">Join our global network. Direct lines to our architecture and support teams.</p>
+                        
+                        <div class="space-y-10 pt-4">
+                            <!-- General Email -->
+                            <a href="mailto:info@isaacsandpartners.online" class="flex items-center gap-6 group hover:translate-x-2 transition-transform">
+                                <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-black transition-all">
+                                    <i data-lucide="mail"></i>
                                 </div>
-                            </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">General Gateway</span>
+                                    <span class="text-lg font-black uppercase text-white/80">info@isaacsandpartners.online</span>
+                                </div>
+                            </a>
+
+                            <!-- Stephanie -->
+                            <a href="tel:+27793185281" class="flex items-center gap-6 group hover:translate-x-2 transition-transform">
+                                <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-black transition-all">
+                                    <i data-lucide="phone"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">Sale & Support — Stephanie</span>
+                                    <span class="text-lg font-black uppercase text-white/80">+27 79 318 5281</span>
+                                </div>
+                            </a>
+
+                            <!-- Maaliek -->
+                            <a href="tel:+27718831097" class="flex items-center gap-6 group hover:translate-x-2 transition-transform">
+                                <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-black transition-all">
+                                    <i data-lucide="shield-check"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black uppercase tracking-[0.4em] text-white/20">Lead Architect — Maaliek</span>
+                                    <span class="text-lg font-black uppercase text-white/80">+27 71 883 1097</span>
+                                </div>
+                            </a>
                         </div>
                     </div>
+                    
                     <div class="bg-black/60 p-12 rounded-[5rem] border border-white/5">
                         <form action="https://formspree.io/f/xvzbonej" method="POST" class="grid gap-8">
-                            <input name="Business" required placeholder="Salon Legal Name" class="w-full p-7 border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
-                            <input name="Email" type="email" required placeholder="Authorized Admin Email" class="w-full p-7 border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold transition-all" />
-                            <textarea name="Message" required placeholder="Operational Details / Branch Count..." class="w-full p-7 border border-white/5 rounded-3xl h-44 resize-none outline-none focus:border-emerald-500 text-white font-bold transition-all"></textarea>
+                            <input name="Business" required placeholder="Salon Name" class="w-full p-7 border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold" />
+                            <input name="Email" type="email" required placeholder="Admin Email" class="w-full p-7 border border-white/5 rounded-3xl outline-none focus:border-emerald-500 text-white font-bold" />
+                            <textarea name="Message" required placeholder="Project Scale & Needs..." class="w-full p-7 border border-white/5 rounded-3xl h-44 resize-none outline-none focus:border-emerald-500 text-white font-bold"></textarea>
                             <button type="submit" class="w-full py-8 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase tracking-[0.4em] text-xs rounded-3xl transition-all shadow-2xl active:scale-95 transform">Book Master Demo</button>
                         </form>
                     </div>
@@ -451,71 +409,145 @@
         </div>
     </section>
 
+    <!-- Funky ISI Intelligence Section (Right at the bottom) -->
+    <section id="isi-intelligence" class="py-60 isi-special-section relative overflow-hidden">
+        <div class="container mx-auto px-6 relative z-10">
+            <div class="text-center mb-32 reveal">
+                <div class="mb-12 inline-block isi-floating-logo">
+                    <img src="https://raw.githubusercontent.com/maliq273/isaacspos-website/refs/heads/main/Isaacs-removebg-preview.svg" alt="ISI Intelligence" class="h-44 mx-auto spiky-glow">
+                </div>
+                <h2 class="text-6xl md:text-[10rem] font-black uppercase tracking-tighter leading-none mb-12">
+                    Isaacs™ Staffing <br/><span class="isi-title-gradient">Intelligence</span>
+                </h2>
+                <p class="text-2xl md:text-4xl text-white/50 max-w-5xl mx-auto font-black italic tracking-tight leading-tight">
+                    "A Unified Business Brain. Converging HR, Timesheets, and Accounting into a single, high-fidelity ecosystem."
+                </p>
+            </div>
+
+            <div class="grid lg:grid-cols-2 gap-8 max-w-7xl mx-auto text-left reveal">
+                <div class="funky-isi-card p-12 rounded-[4rem] group">
+                    <div class="flex items-center gap-6 mb-8">
+                        <div class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:rotate-12 transition-transform">
+                            <i data-lucide="zap" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-3xl font-black uppercase tracking-tighter">Unified Convergence</h4>
+                    </div>
+                    <p class="text-lg text-white/40 font-medium leading-relaxed">
+                        South African BCEA-compliant rate logic (1.5x OT, 2x Sundays). One event triggers a chain reaction: Real-time Payroll updates, SDL liabilities, and automated Double-Entry Ledger posting.
+                    </p>
+                </div>
+
+                <div class="funky-isi-card p-12 rounded-[4rem] group">
+                    <div class="flex items-center gap-6 mb-8">
+                        <div class="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-400 group-hover:-rotate-12 transition-transform">
+                            <i data-lucide="brain-circuit" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-3xl font-black uppercase tracking-tighter">Deep-Seek Gemini AI</h4>
+                    </div>
+                    <p class="text-lg text-white/40 font-medium leading-relaxed">
+                        Procedurally fair contract drafting, CCMA-shielded disciplinary notices, and automated payroll auditing. Integrated Gemini 3 Pro engine acts as your legal and financial guardian.
+                    </p>
+                </div>
+
+                <div class="funky-isi-card p-12 rounded-[4rem] group">
+                    <div class="flex items-center gap-6 mb-8">
+                        <div class="w-16 h-16 bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-400 group-hover:scale-110 transition-transform">
+                            <i data-lucide="shield" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-3xl font-black uppercase tracking-tighter">The JSON Vault</h4>
+                    </div>
+                    <p class="text-lg text-white/40 font-medium leading-relaxed">
+                        100% Data Sovereignty. Run locally as a PWA. Download your entire business ledger and staff history as a single JSON file. Your data is never locked in a proprietary cloud.
+                    </p>
+                </div>
+
+                <div class="funky-isi-card p-12 rounded-[4rem] group">
+                    <div class="flex items-center gap-6 mb-8">
+                        <div class="w-16 h-16 bg-pink-500/10 rounded-2xl flex items-center justify-center text-pink-400 group-hover:scale-110 transition-transform">
+                            <i data-lucide="landmark" class="w-8 h-8"></i>
+                        </div>
+                        <h4 class="text-3xl font-black uppercase tracking-tighter">Statutory Mastery</h4>
+                    </div>
+                    <p class="text-lg text-white/40 font-medium leading-relaxed">
+                        SARS Visual mapping for EMP201. ACB-compatible CSV files for direct salary batches to SA banks (FNB, ABSA, etc.). Hard-coded R95,750 tax threshold logic.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-32 reveal text-center">
+                <a href="#contact" class="isi-banner-btn inline-block px-20 py-10 text-white font-black uppercase text-2xl tracking-[0.4em] rounded-full">
+                    Experience ISI Intelligence
+                </a>
+            </div>
+        </div>
+    </section>
+
     <!-- Footer -->
     <footer class="py-24 bg-black border-t border-white/5">
-        <div class="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-12">
-            <div class="flex flex-col items-center md:items-start gap-4">
-                <div class="text-3xl font-black italic text-emerald-500 tracking-tighter">ISAACSPOS</div>
+        <div class="container mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+            <div class="space-y-4">
+                <div class="text-3xl font-black italic text-emerald-500 tracking-tighter uppercase">ISAACSPOS</div>
                 <p class="text-[10px] font-black uppercase tracking-[0.5em] text-white/20">Industrial Build V2.1.0 Stable</p>
             </div>
-            <div class="flex gap-12 text-[10px] font-black uppercase tracking-[0.3em] text-white/30">
-                <a href="#" class="hover:text-emerald-500 transition-colors">Documentation</a>
-                <a href="#" class="hover:text-emerald-500 transition-colors">Compliance</a>
-                <a href="#" class="hover:text-emerald-500 transition-colors">License</a>
-            </div>
-            <div class="text-[9px] font-black uppercase tracking-[0.6em] text-white/10">
-                © 2026 Isaacs & Partners Pty(Ltd).
-            </div>
+            <div class="text-[9px] font-black uppercase tracking-[0.6em] text-white/10">© 2026 Isaacs & Partners Pty(Ltd). All rights reserved.</div>
         </div>
     </footer>
 
     <script>
-        // Emergency Safe Mode Fallback
-        const safeModeTimeout = setTimeout(() => {
-            document.body.classList.add('safe-mode');
-        }, 3000);
-
-        lucide.createIcons();
-
-        // High-Fidelity Features Registry
-        const features = [
-            { title: "Smart POS Checkout", desc: "Blazing fast interface optimized for high-velocity walk-in and booking transactions.", icon: "shopping-cart" },
-            { title: "Technical CRM", desc: "Securely store color formulas, chemical codes, and technical registries locally.", icon: "user-check" },
-            { title: "Loyalty Engine", desc: "Calculate points automatically based on spend patterns and reward high-value clients.", icon: "star" },
-            { title: "Intelligent Agenda", desc: "Visual drag-and-drop booking system mirroring physical salon registers.", icon: "calendar" },
-            { title: "WhatsApp Automation", desc: "Send receipts, reminders, and marketing promos directly via our hub integration.", icon: "message-circle" },
-            { title: "Digital Folios", desc: "Track every service item, retail product, and tax component in real-time.", icon: "file-text" },
-            { title: "Z-Report Audit", desc: "End-of-day financial reconciliation against physical terminal totals for blind audit.", icon: "clipboard-check" },
-            { title: "Inventory Vault", desc: "Track professional back-bar stock and retail inventory with low-stock alerts.", icon: "package" },
-            { title: "AI Marketing Hub", desc: "Harness Gemini 3 AI to generate high-conversion promotion copy instantly.", icon: "sparkles" },
-            { title: "Role-Based Access", desc: "Strict 3-tier security for Admin, Manager, and Staff hierarchy protection.", icon: "lock" },
-            { title: "Multi-Branch Ready", desc: "Consolidate reporting globally while maintaining local-first uptime.", icon: "layers" },
-            { title: "SQLite Master DB", desc: "Ultra-secure, light, and portable database architecture for data sovereignty.", icon: "database" },
-            { title: "Compliance Ready", desc: "Automated Tax Invoices hard-coded with VAT and legal registration data.", icon: "check-circle" },
-            { title: "Branding Engine", desc: "Customize the POS interface and receipts with your salon's visual identity.", icon: "palette" },
-            { title: "Cloud-Optional", desc: "You decide when and if your data syncs. 100% control over migration.", icon: "cloud" },
-            { title: "Hybrid Recovery", desc: "30-second rapid restoration via portable Master DB files.", icon: "shield" }
+        // Module Registry
+        const moduleRegistry = [
+            { id: "admin", title: "Admin Panel", subtitle: "System Control", file: "Admin.png", desc: "The highest authority layer for structural and legal governance.", functions: ["Role-based access", "SARS compliance", "Security logs"] },
+            { id: "booking", title: "Booking System", subtitle: "Operational Planner", file: "Agenda.png", desc: "Digital appointment register optimized for stylist efficiency.", functions: ["Day/Week views", "Stylist allocation", "Conflict prevention"] },
+            { id: "crm", title: "CRM Ledger", subtitle: "Technical Vault", file: "CRM.png", desc: "Technical history and financial wallets in one secure local vault.", functions: ["Color history", "Wallet top-ups", "Loyalty tracking"] },
+            { id: "sales", title: "Sales POS", subtitle: "Transaction Engine", file: "Sales Screen.png", desc: "Fast, local-first checkout logic with zero latency.", functions: ["Split payments", "VAT calculation", "Loyalty points"] }
         ];
 
-        const featuresGrid = document.getElementById('features-grid');
-        features.forEach(f => {
-            const card = document.createElement('div');
-            card.className = 'glass-card p-8 rounded-[2.5rem] reveal';
-            card.innerHTML = `
-                <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 mb-6 border border-emerald-500/20">
-                    <i data-lucide="${f.icon}"></i>
-                </div>
-                <h4 class="text-lg font-black uppercase mb-3 leading-tight tracking-tighter">${f.title}</h4>
-                <p class="text-xs text-white/30 font-bold leading-relaxed">${f.desc}</p>
-            `;
-            featuresGrid.appendChild(card);
-        });
-        lucide.createIcons();
+        const injectModuleGallery = () => {
+            const container = document.getElementById('module-display');
+            if (!container) return;
+            const RAW_URL = "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/";
 
-        // Particles System
+            moduleRegistry.forEach((m, i) => {
+                const section = document.createElement('div');
+                section.className = `grid lg:grid-cols-2 gap-24 items-center mb-64`;
+                const isEven = i % 2 === 0;
+
+                const textCol = `
+                    <div class="space-y-8 reveal ${isEven ? 'lg:order-1' : 'lg:order-2'} text-left">
+                        <div class="space-y-2">
+                            <span class="text-emerald-500 font-black text-[10px] uppercase tracking-[0.5em]">${m.subtitle}</span>
+                            <h3 class="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">${m.title}</h3>
+                        </div>
+                        <p class="text-lg text-white/50 leading-relaxed font-medium">${m.desc}</p>
+                        <ul class="space-y-3">
+                            ${m.functions.map(f => `<li class="flex items-center gap-3"><div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div><span class="text-xs font-bold uppercase tracking-tighter text-white/80">${f}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                const imgCol = `
+                    <div class="relative group reveal ${isEven ? 'lg:order-2' : 'lg:order-1'}">
+                        <img src="${RAW_URL + m.file}" alt="${m.title}" class="relative z-10 rounded-[3rem] border border-white/5 transition-transform duration-1000 group-hover:scale-[1.03] shadow-3xl">
+                        <div class="absolute -bottom-6 ${isEven ? '-right-6' : '-left-6'} glass py-4 px-8 rounded-2xl border-emerald-500/20 z-20">
+                            <span class="text-[9px] font-black uppercase tracking-[0.4em] text-emerald-500">Index 0${i+1}</span>
+                        </div>
+                    </div>
+                `;
+
+                section.innerHTML = isEven ? textCol + imgCol : imgCol + textCol;
+                container.appendChild(section);
+            });
+        };
+
         const initHero = () => {
-            if (typeof THREE === 'undefined') return;
+            if (typeof THREE === 'undefined') {
+                console.warn('Three.js not loaded. Retrying in 100ms...');
+                setTimeout(initHero, 100);
+                return;
+            }
+
             const canvas = document.getElementById('hero-canvas');
+            if (!canvas) return;
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
@@ -523,7 +555,7 @@
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
             const geo = new THREE.BufferGeometry();
-            const count = 3500;
+            const count = 3000;
             const pos = new Float32Array(count * 3);
             for(let i=0; i<count*3; i++) pos[i] = (Math.random() - 0.5) * 20;
             geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -535,7 +567,6 @@
             const animate = () => {
                 requestAnimationFrame(animate);
                 points.rotation.y += 0.0003;
-                points.rotation.x += 0.0001;
                 renderer.render(scene, camera);
             };
             animate();
@@ -546,23 +577,48 @@
         };
 
         const initGSAP = () => {
-            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+                console.warn('GSAP/ScrollTrigger not loaded. Retrying in 100ms...');
+                setTimeout(initGSAP, 100);
+                return;
+            }
+
             gsap.registerPlugin(ScrollTrigger);
             gsap.utils.toArray('.reveal').forEach(el => {
                 gsap.to(el, { 
                     opacity: 1, 
                     y: 0, 
-                    duration: 1.2, 
+                    scale: 1,
+                    duration: 1.4, 
                     ease: "expo.out", 
-                    scrollTrigger: { trigger: el, start: "top 92%" } 
+                    scrollTrigger: { 
+                        trigger: el, 
+                        start: "top 95%",
+                        toggleActions: "play none none reverse"
+                    } 
                 });
             });
-            clearTimeout(safeModeTimeout);
+        };
+
+        const safetyReveal = () => {
+            setTimeout(() => {
+                document.querySelectorAll('.reveal').forEach(el => {
+                    if (window.getComputedStyle(el).opacity === '0') {
+                        el.style.opacity = '1';
+                        el.style.transform = 'none';
+                    }
+                });
+            }, 3000);
         };
 
         window.addEventListener('DOMContentLoaded', () => {
+            injectModuleGallery();
             initHero();
             initGSAP();
+            safetyReveal();
+            if (window.lucide) {
+                lucide.createIcons();
+            }
         });
     </script>
 </body>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Matrix — The IsaacsPOS Functional Registry</title>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+      }
+    }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald-strong: #10b981; --dark-bg: #000000; }
+        body { background-color: var(--dark-bg); color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-link { transition: color 0.3s ease; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
+        .nav-link:hover { color: #fff; }
+        .reveal { opacity: 0; transform: translateY(40px); }
+        .module-card { border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01); border-radius: 40px; padding: 60px; }
+    </style>
+</head>
+<body class="antialiased">
+    <nav class="fixed top-0 w-full z-[100] px-6 lg:px-12 py-5 flex justify-between items-center glass">
+        <div class="flex items-center gap-4 cursor-pointer" onclick="window.location.href='index.html'">
+            <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20"><span class="text-2xl font-black italic text-white">I</span></div>
+            <div class="flex flex-col text-left"><span class="text-xl font-black uppercase leading-none">IsaacsPOS</span></div>
+        </div>
+        <div class="hidden lg:flex gap-10">
+            <a href="about.html" class="nav-link">Logic</a>
+            <a href="features.html" class="nav-link text-white">Matrix</a>
+            <a href="gallery.html" class="nav-link">Interface</a>
+            <a href="training.html" class="nav-link">Academy</a>
+            <a href="isi.html" class="nav-link">ISI Pro</a>
+            <a href="deploy.html" class="nav-link">Deploy</a>
+        </div>
+        <a href="contact.html" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+    </nav>
+
+    <section class="pt-48 pb-40 container mx-auto px-6">
+        <div class="text-center mb-40 reveal">
+            <div class="text-emerald-500 font-black uppercase text-xs tracking-[0.5em] mb-6">Operational Specs</div>
+            <h1 class="text-6xl md:text-9xl font-black uppercase tracking-tighter mb-12 leading-none">The Functional <span class="text-emerald-500">Matrix.</span></h1>
+            <div class="glass p-2 rounded-[4rem] aspect-video overflow-hidden max-w-6xl mx-auto border-white/10 shadow-3xl">
+                <video autoplay muted loop playsinline class="w-full h-full object-cover">
+                    <source src="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Art%20of%20Salon%20Management%201.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="space-y-24">
+            <!-- A-Z Breakdown -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 reveal">
+                <div class="module-card">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-emerald-500">Sales Journal</h3>
+                    <p class="text-white/40 text-sm leading-relaxed">A chronological record of every finalized transaction, void, and refund for total auditing transparency.</p>
+                </div>
+                <div class="module-card">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-emerald-500">Loyalty Engine</h3>
+                    <p class="text-white/40 text-sm leading-relaxed">Calculates points based on spend (R200 = 1 point). Automatic exclusion of package redemptions.</p>
+                </div>
+                <div class="module-card">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-emerald-500">Color Registry</h3>
+                    <p class="text-white/40 text-sm leading-relaxed">Store high-precision chemical codes, volumes, and application times linked to a client's technical history.</p>
+                </div>
+                <div class="module-card">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-emerald-500">Z-Report Recon</h3>
+                    <p class="text-white/40 text-sm leading-relaxed">Mandatory end-of-day audit comparing POS "Card Total" against physical machine Z-Reports.</p>
+                </div>
+                <div class="module-card">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-emerald-500">Digital Wallet</h3>
+                    <p class="text-white/40 text-sm leading-relaxed">Virtual bank account for clients to store change or pre-paid funds, keeping revenue in the business.</p>
+                </div>
+                <div class="module-card">
+                    <h3 class="text-2xl font-black uppercase mb-4 text-emerald-500">SARS Protocol</h3>
+                    <p class="text-white/40 text-sm leading-relaxed">Sequential tax invoices with VAT registration and legal headers generated instantly in PDF format.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-24 bg-black border-t border-white/5 text-center text-[9px] font-black uppercase tracking-[0.6em] opacity-30">© 2026 Isaacs & Partners Pty(Ltd).</footer>
+    
+    <script type="module" src="chatbot.js"></script>
+    <script>
+        const initGSAP = () => {
+            if (typeof gsap === 'undefined') { setTimeout(initGSAP, 200); return; }
+            gsap.registerPlugin(ScrollTrigger);
+            gsap.utils.toArray('.reveal').forEach(el => { gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } }); });
+        };
+        window.addEventListener('load', () => { initGSAP(); lucide.createIcons(); });
+    </script>
+</body>
+</html>

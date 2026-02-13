@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Academy — Staff Training Protocols</title>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+      }
+    }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald-strong: #10b981; --dark-bg: #000000; }
+        body { background-color: var(--dark-bg); color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-link { transition: color 0.3s ease; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
+        .nav-link:hover { color: #fff; }
+        .reveal { opacity: 0; transform: translateY(40px); }
+        .training-viewport { width: 100%; height: 80vh; background: #080808; border-radius: 4rem; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .tier-card { padding: 50px; border: 1px solid rgba(255,255,255,0.05); border-radius: 40px; background: rgba(255,255,255,0.01); transition: all 0.5s ease; }
+        .tier-card:hover { border-color: #10b981; }
+    </style>
+</head>
+<body class="antialiased">
+    <nav class="fixed top-0 w-full z-[100] px-6 lg:px-12 py-5 flex justify-between items-center glass">
+        <div class="flex items-center gap-4 cursor-pointer" onclick="window.location.href='index.html'">
+            <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20"><span class="text-2xl font-black italic text-white">I</span></div>
+            <div class="flex flex-col text-left"><span class="text-xl font-black uppercase leading-none">IsaacsPOS</span></div>
+        </div>
+        <div class="hidden lg:flex gap-10">
+            <a href="about.html" class="nav-link">Logic</a>
+            <a href="features.html" class="nav-link">Matrix</a>
+            <a href="gallery.html" class="nav-link">Interface</a>
+            <a href="training.html" class="nav-link text-white">Academy</a>
+            <a href="isi.html" class="nav-link">ISI Pro</a>
+            <a href="deploy.html" class="nav-link">Deploy</a>
+        </div>
+        <a href="contact.html" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+    </nav>
+
+    <section class="pt-48 pb-40 container mx-auto px-6">
+        <div class="text-center mb-24 reveal">
+            <div class="text-emerald-500 font-black uppercase text-xs tracking-[0.5em] mb-6">Staff Mastery Hub</div>
+            <h1 class="text-6xl md:text-[8rem] font-black uppercase tracking-tighter mb-12 leading-none">The Training <span class="text-emerald-500">Academy.</span></h1>
+            <p class="text-xl text-white/40 max-w-3xl mx-auto font-medium">Standardize your salon operations with our rigid security hierarchy. Every action is signed by a 4-digit digital signature audit trail.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8 mb-40 reveal">
+            <div class="tier-card">
+                <div class="text-emerald-500 font-black mb-6 uppercase text-xs tracking-widest">Level 01: The Floor</div>
+                <h3 class="text-3xl font-black uppercase mb-6">Staff Registry</h3>
+                <p class="text-white/40 text-sm leading-relaxed mb-6">Process daily sales, manage personal agenda slots, and update client color registries. Restricted from all financial overrides.</p>
+                <ul class="text-[10px] font-black uppercase tracking-widest text-white/20 space-y-2">
+                    <li>✓ Process Sales</li>
+                    <li>✓ Update CRM</li>
+                    <li>✓ Folio Creation</li>
+                </ul>
+            </div>
+            <div class="tier-card">
+                <div class="text-emerald-500 font-black mb-6 uppercase text-xs tracking-widest">Level 02: Governance</div>
+                <h3 class="text-3xl font-black uppercase mb-6">Floor Manager</h3>
+                <p class="text-white/40 text-sm leading-relaxed mb-6">The authority on overrides. Authorized to void folios, process refunds to wallets, and perform daily bank reconciliation audits.</p>
+                <ul class="text-[10px] font-black uppercase tracking-widest text-emerald-400 space-y-2">
+                    <li>✓ Void Transaction</li>
+                    <li>✓ Z-Report Recon</li>
+                    <li>✓ Price Overrides</li>
+                </ul>
+            </div>
+            <div class="tier-card">
+                <div class="text-emerald-500 font-black mb-6 uppercase text-xs tracking-widest">Level 03: The Architect</div>
+                <h3 class="text-3xl font-black uppercase mb-6">System Admin</h3>
+                <p class="text-white/40 text-sm leading-relaxed mb-6">The owner's command. Exclusive access to SARS compliance headers, master database backups, and AI marketing hubs.</p>
+                <ul class="text-[10px] font-black uppercase tracking-widest text-indigo-400 space-y-2">
+                    <li>✓ SARS Settings</li>
+                    <li>✓ Master Backups</li>
+                    <li>✓ AI Marketing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="training-viewport reveal relative group shadow-3xl">
+            <iframe src="https://view.officeapps.live.com/op/view.aspx?src=https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Welcome-to-Your-IsaacsPOS-V21-Training-Program.pptx" width="100%" height="100%" frameborder="0"></iframe>
+            <div class="absolute bottom-12 right-12 bg-black/80 px-10 py-5 rounded-full glass border-white/10 text-[10px] font-black uppercase tracking-widest pointer-events-none group-hover:opacity-0 transition-opacity">
+                Interactive Staff Onboarding Manual
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-24 bg-black border-t border-white/5 text-center text-[9px] font-black uppercase tracking-[0.6em] opacity-30">© 2026 Isaacs & Partners Pty(Ltd).</footer>
+    
+    <script type="module" src="chatbot.js"></script>
+    <script>
+        window.addEventListener('load', () => { 
+            gsap.registerPlugin(ScrollTrigger);
+            gsap.utils.toArray('.reveal').forEach(el => {
+                gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
+            });
+            if(window.lucide) lucide.createIcons(); 
+        });
+    </script>
+</body>
+</html>

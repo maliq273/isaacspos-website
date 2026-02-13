@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Logic — The Isaacs & Partners Philosophy</title>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+      }
+    }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald-strong: #10b981; --dark-bg: #000000; }
+        body { background-color: var(--dark-bg); color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-link { transition: color 0.3s ease; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
+        .nav-link:hover { color: #fff; }
+        .reveal { opacity: 0; transform: translateY(40px); }
+        .phil-card { border: 1px solid rgba(255,255,255,0.05); padding: 50px; border-radius: 40px; background: rgba(255,255,255,0.01); }
+        .team-profile { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 30px 0; }
+    </style>
+</head>
+<body class="antialiased">
+    <nav class="fixed top-0 w-full z-[100] px-6 lg:px-12 py-5 flex justify-between items-center glass">
+        <div class="flex items-center gap-4 cursor-pointer" onclick="window.location.href='index.html'">
+            <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20"><span class="text-2xl font-black italic text-white">I</span></div>
+            <div class="flex flex-col text-left"><span class="text-xl font-black uppercase leading-none">IsaacsPOS</span></div>
+        </div>
+        <div class="hidden lg:flex gap-10">
+            <a href="about.html" class="nav-link text-white">Logic</a>
+            <a href="features.html" class="nav-link">Matrix</a>
+            <a href="gallery.html" class="nav-link">Interface</a>
+            <a href="training.html" class="nav-link">Academy</a>
+            <a href="isi.html" class="nav-link">ISI Pro</a>
+            <a href="deploy.html" class="nav-link">Deploy</a>
+        </div>
+        <a href="contact.html" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+    </nav>
+
+    <section class="pt-48 pb-40 container mx-auto px-6">
+        <div class="max-w-4xl reveal">
+            <div class="text-emerald-500 font-black uppercase text-xs tracking-[0.5em] mb-6">Manifesto V2.1</div>
+            <h1 class="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-12">Sovereign <br/><span class="text-emerald-500">Business Logic.</span></h1>
+            <p class="text-2xl text-white/50 leading-relaxed font-medium">We built IsaacsPOS for the salon owner who values data ownership above all else. In an era of fragile cloud-locked subscriptions, we offer the Gold Standard of local-first stability.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-12 mt-40 reveal">
+            <div class="phil-card">
+                <i data-lucide="database" class="text-emerald-500 mb-8 w-12 h-12"></i>
+                <h3 class="text-3xl font-black uppercase mb-6">The Local-First Mandate</h3>
+                <p class="text-white/40 text-lg leading-relaxed">Hosting data on an SQLite Master Node located physically in your salon eliminates the "No Internet, No Sales" bottleneck. We prioritize your ability to trade over our ability to track you.</p>
+            </div>
+            <div class="phil-card">
+                <i data-lucide="shield-check" class="text-emerald-500 mb-8 w-12 h-12"></i>
+                <h3 class="text-3xl font-black uppercase mb-6">The Backup Creed</h3>
+                <p class="text-white/40 text-lg leading-relaxed">We advocate for physical USB backups. This is the only immutable defense against hardware theft or failure. Your data, your responsibility, your absolute security.</p>
+            </div>
+        </div>
+
+        <div class="mt-48 reveal">
+            <h3 class="text-4xl font-black uppercase mb-16 text-center md:text-left">Architectural Lineage</h3>
+            <div class="grid md:grid-cols-2 gap-24">
+                <div class="team-profile">
+                    <div class="text-emerald-500 font-black text-3xl mb-2">Maaliek</div>
+                    <div class="text-white/30 uppercase text-[10px] tracking-[0.4em] mb-6">Systems Architecture & Lead Engineering</div>
+                    <p class="text-white/50 text-sm leading-relaxed">Pioneer of the "Local-First" SQLite registry for retail. Maaliek oversees the core industrial logic and secure handshake protocols that power IsaacsPOS Enterprise.</p>
+                </div>
+                <div class="team-profile">
+                    <div class="text-emerald-500 font-black text-3xl mb-2">Stephanie</div>
+                    <div class="text-white/30 uppercase text-[10px] tracking-[0.4em] mb-6">Operational Strategy & Sales</div>
+                    <p class="text-white/50 text-sm leading-relaxed">Strategist for multi-salon scaling. Stephanie leads the operational training program and ensures every feature is built to solve real-world floor bottlenecks.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-24 bg-black border-t border-white/5 text-center text-[9px] font-black uppercase tracking-[0.6em] opacity-30">© 2026 Isaacs & Partners Pty(Ltd).</footer>
+    
+    <script type="module" src="chatbot.js"></script>
+    <script>
+        window.addEventListener('load', () => {
+            gsap.registerPlugin(ScrollTrigger);
+            gsap.utils.toArray('.reveal').forEach(el => {
+                gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
+            });
+            if(window.lucide) lucide.createIcons();
+        });
+    </script>
+</body>
+</html>

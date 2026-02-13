@@ -1,0 +1,1 @@
+// Deprecated: Logic moved to index.html for production hosting.

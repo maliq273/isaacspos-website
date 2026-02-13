@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Interface — The Visual Suite of IsaacsPOS</title>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
+      }
+    }
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --emerald-strong: #10b981; --dark-bg: #000000; }
+        body { background-color: var(--dark-bg); color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .nav-link { transition: color 0.3s ease; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
+        .nav-link:hover { color: #fff; }
+        .reveal { opacity: 0; transform: translateY(40px); }
+        .gallery-item { border: 1px solid rgba(255,255,255,0.05); border-radius: 4rem; overflow: hidden; background: rgba(255,255,255,0.01); transition: all 0.5s ease; box-shadow: 0 40px 100px rgba(0,0,0,0.6); }
+        .gallery-item:hover { border-color: #10b981; transform: translateY(-10px); }
+    </style>
+</head>
+<body class="antialiased">
+    <nav class="fixed top-0 w-full z-[100] px-6 lg:px-12 py-5 flex justify-between items-center glass">
+        <div class="flex items-center gap-4 cursor-pointer" onclick="window.location.href='index.html'">
+            <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20"><span class="text-2xl font-black italic text-white">I</span></div>
+            <div class="flex flex-col text-left"><span class="text-xl font-black uppercase leading-none">IsaacsPOS</span></div>
+        </div>
+        <div class="hidden lg:flex gap-10">
+            <a href="about.html" class="nav-link">Logic</a>
+            <a href="features.html" class="nav-link">Matrix</a>
+            <a href="gallery.html" class="nav-link text-white">Interface</a>
+            <a href="training.html" class="nav-link">Academy</a>
+            <a href="isi.html" class="nav-link">ISI Pro</a>
+            <a href="deploy.html" class="nav-link">Deploy</a>
+        </div>
+        <a href="contact.html" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+    </nav>
+
+    <section class="pt-48 pb-40 container mx-auto px-6">
+        <div class="text-center mb-40 reveal">
+            <div class="text-emerald-500 font-black uppercase text-xs tracking-[0.5em] mb-6">Visual Viewport</div>
+            <h1 class="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-none mb-12">System <span class="text-emerald-500">Interface.</span></h1>
+            <p class="text-white/40 text-xl font-medium max-w-2xl mx-auto">Explore the 10 core interfaces that orchestrate the modern salon business.</p>
+        </div>
+
+        <div id="module-display" class="space-y-48"></div>
+    </section>
+
+    <footer class="py-24 bg-black border-t border-white/5 text-center text-[9px] font-black uppercase tracking-[0.6em] opacity-30">© 2026 Isaacs & Partners Pty(Ltd).</footer>
+    
+    <script type="module" src="chatbot.js"></script>
+    <script>
+        const moduleRegistry = [
+            { id: "sales", title: "POS Terminal", file: "Sales Screen.png", desc: "The industrial engine. Multi-stylist folios with split-payment logic and real-time loyalty calculations." },
+            { id: "agenda", title: "Smart Agenda", file: "Agenda.png", desc: "A column-based scheduling matrix that mirrors physical salon logic. Drag-and-drop orchestration of the entire floor." },
+            { id: "crm", title: "Technical CRM", file: "CRM.png", desc: "The technical vault. Historical color formulas, client spending trends, and chemical application logs." },
+            { id: "admin", title: "Admin Panel", file: "Admin.png", desc: "Command center for owners. Configure SARS tax parameters, manage staff security tiers, and execute backups." },
+            { id: "reports", title: "Analytical Hub", file: "Reports.png", desc: "High-fidelity visualization of salon performance. Revenue trends, stylist commission totals, and inventory velocity." },
+            { id: "inventory", title: "Vault Inventory", file: "Inventory.png", desc: "Granular stock management. Segregate retail products from internal chemical supplies with precise unit tracking." },
+            { id: "isi", title: "Marketing AI", file: "Gemini broadcast.png", desc: "Powered by Gemini 3. Generate campaign copy and broadcast via the official secure WhatsApp bridge." },
+            { id: "compliance", title: "SARS Registry", file: "sars.png", desc: "Automated fiscal module. Ensures legal headers and tax thresholds are met on every finalized invoice." },
+            { id: "portal", title: "Client Kiosk", file: "Customer Portal.png", desc: "Self-service registration gateway. Allows walk-ins to build their profile and select services on Android hardware." },
+            { id: "security", title: "Audit Log", file: "Security.png", desc: "A tamper-proof chronological log of every system entry. Tracks who did what, when, and from which terminal." }
+        ];
+        
+        const injectGallery = () => {
+            const container = document.getElementById('module-display');
+            const RAW = "https://raw.githubusercontent.com/maliq273/isaacspos-website/main/";
+            moduleRegistry.forEach((m, i) => {
+                const div = document.createElement('div');
+                div.className = `grid lg:grid-cols-2 gap-24 items-center reveal`;
+                const isEven = i % 2 === 0;
+                div.innerHTML = `
+                    <div class="${isEven ? 'lg:order-1' : 'lg:order-2'}">
+                        <span class="text-emerald-500 font-black uppercase text-xs tracking-[0.5em] mb-4 block">Module ${i+1}</span>
+                        <h3 class="text-4xl md:text-6xl font-black uppercase mb-8 tracking-tighter">${m.title}</h3>
+                        <p class="text-white/40 text-xl leading-relaxed mb-10 font-medium">${m.desc}</p>
+                        <div class="inline-flex gap-4">
+                            <span class="px-5 py-3 glass rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-500">Local SQLite Master</span>
+                            <span class="px-5 py-3 glass rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-500">Enterprise Node</span>
+                        </div>
+                    </div>
+                    <div class="gallery-item ${isEven ? 'lg:order-2' : 'lg:order-1'}">
+                        <img src="${RAW + encodeURIComponent(m.file)}" class="w-full h-auto hover:scale-105 transition-transform duration-1000 shadow-2xl">
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        };
+
+        window.addEventListener('load', () => { 
+            injectGallery(); 
+            gsap.registerPlugin(ScrollTrigger);
+            gsap.utils.toArray('.reveal').forEach(el => {
+                gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
+            });
+            if(window.lucide) lucide.createIcons(); 
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "name": "IsaacsPOS Enterprise V2.1",
+  "description": "Professional local-first Salon Management Software in South Africa. 100% SARS compliant, zero cloud latency, and AI-powered marketing.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

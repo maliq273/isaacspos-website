@@ -1,1 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IsaacsPOS Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>Enterprise Dashboard</h1>
+
+<div class="stats">
+  <div class="card">
+    <h2>Total Turnover</h2>
+    <p id="totalRevenue">Loading...</p>
+  </div>
+
+  <div class="card">
+    <h2>Total Products</h2>
+    <p id="productCount">Loading...</p>
+  </div>
+</div>
+
+<canvas id="branchChart"></canvas>
+
+<script src="dashboard.js"></script>
+
+</body>
+</html>
 

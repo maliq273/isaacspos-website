@@ -1,1 +1,38 @@
+body {
+  font-family: Arial;
+  background: #111;
+  color: white;
+  padding: 40px;
+}
+
+.login-container {
+  max-width: 400px;
+  margin: auto;
+}
+
+input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #00c896;
+  border: none;
+  color: white;
+}
+
+.stats {
+  display: flex;
+  gap: 20px;
+}
+
+.card {
+  background: #222;
+  padding: 20px;
+  border-radius: 10px;
+}
 

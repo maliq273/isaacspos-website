@@ -19,7 +19,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --emerald-strong: #10b981; --dark-bg: #000000; }
+        :root { --emerald: #10b981; --emerald-strong: #10b981; --dark-bg: #000000; }
         body { background-color: var(--dark-bg); color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .nav-link { transition: color 0.3s ease; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
@@ -27,6 +27,24 @@
         .reveal { opacity: 0; transform: translateY(40px); }
         .tech-box { border: 1px solid rgba(255,255,255,0.05); background: #050505; border-radius: 4rem; padding: 60px; transition: all 0.5s ease; }
         .tech-box:hover { border-color: #10b981; }
+
+        /* Mobile Menu Styles */
+        #mobile-menu {
+            position: fixed; top: 0; right: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(40px);
+            z-index: 200; display: none; flex-direction: column;
+            padding: 40px; justify-content: center;
+        }
+        .mobile-link {
+            font-size: 2.5rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: -0.05em; margin: 15px 0; color: #ffffff;
+            opacity: 0; transform: translateX(30px);
+            display: flex; align-items: center; gap: 20px;
+            transition: color 0.3s ease;
+        }
+        .mobile-link:hover { color: var(--emerald); }
+        .mobile-link i { color: var(--emerald); width: 24px; height: 24px; }
+        .menu-open body { overflow: hidden; }
     </style>
 </head>
 <body class="antialiased">
@@ -43,8 +61,32 @@
             <a href="isi.html" class="nav-link">ISI Pro</a>
             <a href="deploy.html" class="nav-link text-white">Deploy</a>
         </div>
-        <a href="contact.html" class="px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+        <div class="flex items-center gap-6">
+            <a href="contact.html" class="hidden sm:block px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+            <button id="menu-toggle" class="lg:hidden w-12 h-12 glass rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
     </nav>
+
+    <!-- MOBILE OVERLAY MENU -->
+    <div id="mobile-menu">
+        <div class="absolute top-8 right-8">
+            <button id="menu-close" class="w-16 h-16 rounded-full glass flex items-center justify-center text-white active:scale-90 transition-transform">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+        </div>
+        <div class="flex flex-col">
+            <a href="about.html" class="mobile-link"><i data-lucide="book-open"></i> Logic</a>
+            <a href="features.html" class="mobile-link"><i data-lucide="grid"></i> Matrix</a>
+            <a href="gallery.html" class="mobile-link"><i data-lucide="layout"></i> Interface</a>
+            <a href="isi.html" class="mobile-link"><i data-lucide="zap"></i> ISI Pro</a>
+            <a href="deploy.html" class="mobile-link text-emerald-500"><i data-lucide="cpu"></i> Deploy</a>
+            <a href="training.html" class="mobile-link"><i data-lucide="award"></i> Academy</a>
+            <div class="mt-12 h-px bg-white/10 w-full"></div>
+            <a href="contact.html" class="mobile-link mt-12 text-sm tracking-widest opacity-60">Connect Architecture</a>
+        </div>
+    </div>
 
     <section class="pt-48 pb-40 container mx-auto px-6">
         <div class="text-center mb-24 reveal">
@@ -115,13 +157,39 @@
     
     <script type="module" src="chatbot.js"></script>
     <script>
-        window.addEventListener('load', () => { 
+        const initGSAP = () => {
+            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') { setTimeout(initGSAP, 200); return; }
             gsap.registerPlugin(ScrollTrigger);
             gsap.utils.toArray('.reveal').forEach(el => {
                 gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
             });
-            if(window.lucide) lucide.createIcons(); 
-        });
+
+            // Mobile Menu Animation
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuClose = document.getElementById('menu-close');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileLinks = document.querySelectorAll('.mobile-link');
+
+            const openMenu = () => {
+                mobileMenu.style.display = 'flex';
+                document.body.classList.add('menu-open');
+                gsap.to(mobileMenu, { opacity: 1, duration: 0.5, ease: "power2.out" });
+                gsap.to(mobileLinks, { opacity: 1, x: 0, duration: 0.6, stagger: 0.1, ease: "power3.out", delay: 0.2 });
+            };
+
+            const closeMenu = () => {
+                gsap.to(mobileLinks, { opacity: 0, x: 30, duration: 0.4, stagger: 0.05, ease: "power3.in" });
+                gsap.to(mobileMenu, { opacity: 0, duration: 0.5, ease: "power2.in", delay: 0.2, onComplete: () => {
+                    mobileMenu.style.display = 'none';
+                    document.body.classList.remove('menu-open');
+                }});
+            };
+
+            if(menuToggle) menuToggle.onclick = openMenu;
+            if(menuClose) menuClose.onclick = closeMenu;
+            mobileLinks.forEach(link => link.onclick = closeMenu);
+        };
+        window.addEventListener('load', () => { initGSAP(); if(window.lucide) lucide.createIcons(); });
     </script>
 </body>
 </html>

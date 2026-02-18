@@ -1,67 +1,47 @@
 const supabase = window.supabase.createClient(
-  "https://YOUR_PROJECT.supabase.co",
-  "YOUR_ANON_PUBLIC_KEY"
+    "https://pespysgaqfstachvnsvr.supabase.co", 
+    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
 );
 
-async function loadDashboard() {
+async function initDashboard() {
+    // 1. Check Authentication State
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) {
-    window.location.href = "index.html";
-  }
-
-  const userId = userData.user.id;
-
-  // Get company linked to user
-  const { data: company } = await supabase
-    .from("companies")
-    .select("*")
-    .eq("owner_id", userId)
-    .single();
-
-  // Get branches
-  const { data: branches } = await supabase
-    .from("branches")
-    .select("*")
-    .eq("company_id", company.id);
-
-  const branchIds = branches.map(b => b.id);
-
-  // Get sales
-  const { data: sales } = await supabase
-    .from("sales")
-    .select("*")
-    .in("branch_id", branchIds);
-
-  let totalRevenue = sales.reduce((sum, s) => sum + Number(s.total_amount), 0);
-  document.getElementById("totalRevenue").innerText = "R " + totalRevenue;
-
-  // Product count
-  const { data: products } = await supabase
-    .from("products")
-    .select("*")
-    .in("branch_id", branchIds);
-
-  document.getElementById("productCount").innerText = products.length;
-
-  // Revenue per branch chart
-  let branchRevenue = branches.map(branch => {
-    let branchSales = sales.filter(s => s.branch_id === branch.id);
-    let total = branchSales.reduce((sum, s) => sum + Number(s.total_amount), 0);
-    return total;
-  });
-
-  new Chart(document.getElementById("branchChart"), {
-    type: "bar",
-    data: {
-      labels: branches.map(b => b.branch_name),
-      datasets: [{
-        label: "Revenue per Branch",
-        data: branchRevenue
-      }]
+    if (sessionError || !session) {
+        console.error("No active session detected. Redirecting to access node.");
+        window.location.href = "index.html";
+        return;
     }
-  });
+
+    // 2. Set User UI
+    document.getElementById('user-email').textContent = session.user.email;
+    lucide.createIcons();
+
+    // 3. Fetch Company-Specific Data
+    // Logic: In a real scenario, we'd fetch from a 'salons' table where user_id = user.id
+    // For this demo, we'll simulate an empty state or basic profile fetch
+    try {
+        const { data: profile, error: profileError } = await supabase
+            .from('profiles') // Assuming a profiles table exists
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+        if (profileError) {
+            console.warn("Profile registry not found. Running in Generic Mode.");
+        } else {
+            console.log("Profile handshake successful:", profile);
+        }
+    } catch (err) {
+        console.error("Internal registry fault:", err);
+    }
 }
 
-loadDashboard();
+// Global Logout Handler
+document.getElementById('logout-btn').onclick = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (!error) window.location.href = "index.html";
+};
 
+// Start
+document.addEventListener('DOMContentLoaded', initDashboard);

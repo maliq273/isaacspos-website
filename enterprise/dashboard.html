@@ -1,31 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>IsaacsPOS Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Dashboard — IsaacsPOS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="bg-[#050505] text-white">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside class="w-80 glass border-r border-white/5 flex flex-col p-8 hidden lg:flex">
+            <div class="flex items-center gap-4 mb-16">
+                <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
+                    <span class="text-xl font-black italic">I</span>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-black uppercase tracking-tighter">Enterprise</span>
+                    <span class="text-[8px] font-bold text-emerald-500 tracking-[0.3em] uppercase">V2.1 Hub</span>
+                </div>
+            </div>
 
-<h1>Enterprise Dashboard</h1>
+            <nav class="flex-1 space-y-4">
+                <a href="#" class="nav-btn active"><i data-lucide="layout-grid"></i> Registry Overview</a>
+                <a href="#" class="nav-btn"><i data-lucide="users"></i> Salon Network</a>
+                <a href="#" class="nav-btn"><i data-lucide="bar-chart-3"></i> Global Stats</a>
+                <a href="#" class="nav-btn"><i data-lucide="settings"></i> Cloud Settings</a>
+            </nav>
 
-<div class="stats">
-  <div class="card">
-    <h2>Total Turnover</h2>
-    <p id="totalRevenue">Loading...</p>
-  </div>
+            <div class="mt-auto pt-8 border-t border-white/5">
+                <button id="logout-btn" class="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-white/30 hover:text-red-400 transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Terminal Shutdown
+                </button>
+            </div>
+        </aside>
 
-  <div class="card">
-    <h2>Total Products</h2>
-    <p id="productCount">Loading...</p>
-  </div>
-</div>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-y-auto industrial-grid">
+            <header class="p-8 flex justify-between items-center glass lg:bg-transparent lg:backdrop-blur-none border-b border-white/5 lg:border-none">
+                <div>
+                    <h2 class="text-2xl font-black uppercase tracking-tighter">System Health</h2>
+                    <p class="text-white/30 text-xs font-bold uppercase tracking-widest mt-1">Status: <span class="text-emerald-500">Authenticated & Active</span></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="user-display" class="hidden sm:flex flex-col items-end">
+                        <span id="user-email" class="text-xs font-black text-white/80">---</span>
+                        <span class="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Master Node</span>
+                    </div>
+                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center border-emerald-500/20">
+                        <i data-lucide="user" class="text-emerald-500"></i>
+                    </div>
+                </div>
+            </header>
 
-<canvas id="branchChart"></canvas>
+            <div class="p-8 space-y-8 max-w-7xl mx-auto w-full">
+                <!-- Stat Cards -->
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="stat-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-white/30">Network Revenue</span>
+                            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i>
+                        </div>
+                        <div class="text-4xl font-black tracking-tighter">R0.00</div>
+                        <div class="mt-2 text-[10px] text-emerald-500 font-bold uppercase tracking-widest">+0% System Yield</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-white/30">Active Salons</span>
+                            <i data-lucide="home" class="w-4 h-4 text-emerald-500"></i>
+                        </div>
+                        <div class="text-4xl font-black tracking-tighter">0</div>
+                        <div class="mt-2 text-[10px] text-white/20 font-bold uppercase tracking-widest">Global Master Node</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="text-[9px] font-black uppercase tracking-widest text-white/30">Cloud Sync Status</span>
+                            <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500 animate-spin"></i>
+                        </div>
+                        <div class="text-4xl font-black tracking-tighter">100%</div>
+                        <div class="mt-2 text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Uplink Stable</div>
+                    </div>
+                </div>
 
-<script src="dashboard.js"></script>
+                <!-- Main Section -->
+                <div class="glass rounded-[3rem] border-white/5 overflow-hidden">
+                    <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
+                        <h3 class="font-black uppercase tracking-widest text-xs">Recent Enterprise Handshakes</h3>
+                        <button class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Full Registry <i data-lucide="external-link" class="inline w-3 h-3 ml-1"></i></button>
+                    </div>
+                    <div class="p-12 text-center">
+                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 opacity-20">
+                            <i data-lucide="database" class="w-10 h-10"></i>
+                        </div>
+                        <p class="text-white/30 font-bold text-sm">No operational data detected in this registry node.</p>
+                        <p class="text-[10px] uppercase tracking-widest text-white/10 mt-2">Initialize Local Terminals to sync cloud analytics.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
+    <script src="dashboard.js"></script>
 </body>
 </html>
-

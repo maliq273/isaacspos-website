@@ -28,7 +28,6 @@
         .module-card { border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.01); border-radius: 40px; padding: 60px; transition: all 0.5s ease; }
         .module-card:hover { border-color: #10b981; background: rgba(16,185,129,0.03); }
 
-        /* Mobile Menu Styles */
         #mobile-menu {
             position: fixed; top: 0; right: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(40px);
@@ -45,6 +44,19 @@
         .mobile-link:hover { color: var(--emerald); }
         .mobile-link i { color: var(--emerald); width: 24px; height: 24px; }
         .menu-open body { overflow: hidden; }
+
+        .btn-primary {
+            background: #fff; color: #000; border-radius: 1.5rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 28px;
+            transition: all 0.3s ease; font-size: 10px; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-primary:hover { background: var(--emerald); color: #fff; transform: scale(1.05); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3); }
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.03); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 14px 28px; transition: all 0.3s ease; font-size: 10px; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-glass:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
     </style>
 </head>
 <body class="antialiased">
@@ -61,15 +73,15 @@
             <a href="isi.html" class="nav-link">ISI Pro</a>
             <a href="deploy.html" class="nav-link">Deploy</a>
         </div>
-        <div class="flex items-center gap-6">
-            <a href="contact.html" class="hidden sm:block px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
+        <div class="flex items-center gap-4">
+            <a href="enterprise/index.html" class="btn-glass hidden sm:flex">Log In</a>
+            <a href="contact.html" class="btn-primary">Initialize Access</a>
             <button id="menu-toggle" class="lg:hidden w-12 h-12 glass rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform">
                 <i data-lucide="menu"></i>
             </button>
         </div>
     </nav>
 
-    <!-- MOBILE OVERLAY MENU -->
     <div id="mobile-menu">
         <div class="absolute top-8 right-8">
             <button id="menu-close" class="w-16 h-16 rounded-full glass flex items-center justify-center text-white active:scale-90 transition-transform">
@@ -77,6 +89,7 @@
             </button>
         </div>
         <div class="flex flex-col">
+            <a href="enterprise/index.html" class="mobile-link text-emerald-400 mb-8"><i data-lucide="log-in"></i> Enterprise Log In</a>
             <a href="about.html" class="mobile-link"><i data-lucide="book-open"></i> Logic</a>
             <a href="features.html" class="mobile-link text-emerald-500"><i data-lucide="grid"></i> Matrix</a>
             <a href="gallery.html" class="mobile-link"><i data-lucide="layout"></i> Interface</a>
@@ -150,7 +163,6 @@
                 gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
             });
 
-            // Mobile Menu Animation
             const menuToggle = document.getElementById('menu-toggle');
             const menuClose = document.getElementById('menu-close');
             const mobileMenu = document.getElementById('mobile-menu');

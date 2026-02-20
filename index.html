@@ -10,40 +10,8 @@
     <meta name="keywords" content="salon software south africa, hair salon management, sars compliant pos, beauty salon system, isaacspos, salon payments south africa" />
     <link rel="canonical" href="https://isaacspos.co.za/" />
 
-    <!-- GOOGLE SEARCH CONSOLE VERIFICATION -->
-    <meta name="google-site-verification" content="3fc7f5b215ae000b" />
-
-    <!-- OPEN GRAPH / AI SOCIAL GRAPH -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="IsaacsPOS V2.1 — Professional Salon Management Intelligence" />
-    <meta property="og:description" content="The gold standard for South African salon owners. Local-first architecture, SARS compliant invoicing, and integrated payment handshakes." />
-    <meta property="og:url" content="https://isaacspos.co.za/" />
-    <meta property="og:image" content="https://raw.githubusercontent.com/maliq273/isaacspos-website/main/Landscape.png" />
-
-    <!-- JSON-LD STRUCTURED DATA -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "IsaacsPOS Enterprise",
-      "operatingSystem": "Windows 10, Windows 11, Android",
-      "applicationCategory": "BusinessApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "ZAR"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5",
-        "reviewCount": "150"
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "Isaacs & Partners"
-      }
-    }
-    </script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script type="importmap">
     {
@@ -60,16 +28,70 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --emerald: #10b981; --dark: #000000; }
-        body { background: var(--dark); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .industrial-grid { background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0); background-size: 50px 50px; }
-        .reveal { opacity: 0; transform: translateY(50px); }
-        #hero-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.4; }
-        .faq-card { background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.05); border-radius: 30px; padding: 45px; transition: all 0.5s ease; }
-        .faq-card:hover { border-color: var(--emerald); background: rgba(16,185,129,0.05); transform: translateY(-5px); }
+        :root {
+            --emerald: #10b981;
+            --dark: #050505;
+        }
 
-        /* Mobile Menu Styles */
+        body {
+            background-color: var(--dark);
+            color: #fff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .industrial-grid {
+            background-color: var(--dark);
+            background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0);
+            background-size: 50px 50px;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: revealAnim 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes revealAnim {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .faq-card {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 30px;
+            padding: 45px;
+            transition: all 0.5s ease;
+        }
+
+        .faq-card:hover {
+            border-color: var(--emerald);
+            background: rgba(16, 185, 129, 0.05);
+            transform: translateY(-5px);
+        }
+
+        /* Mobile Menu */
         #mobile-menu {
             position: fixed; top: 0; right: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(40px);
@@ -77,17 +99,57 @@
             padding: 40px; justify-content: center;
         }
         .mobile-link {
-            font-size: 2.5rem; font-weight: 900; text-transform: uppercase;
-            letter-spacing: -0.05em; margin: 15px 0; color: #ffffff;
+            font-size: 2rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: -0.05em; margin: 10px 0; color: #ffffff;
             opacity: 0; transform: translateX(30px);
             display: flex; align-items: center; gap: 20px;
             transition: color 0.3s ease;
         }
         .mobile-link:hover { color: var(--emerald); }
-        .mobile-link i { color: var(--emerald); width: 24px; height: 24px; }
-        
-        .menu-open body { overflow: hidden; }
+
+        /* Custom Buttons */
+        .btn-primary {
+            background: #fff;
+            color: #000;
+            border-radius: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 18px 35px;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-primary:hover {
+            background: var(--emerald);
+            color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 18px 35px;
+            transition: all 0.3s ease;
+            font-size: 11px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
     </style>
+<link rel="stylesheet" href="/index.css">
 </head>
 <body class="antialiased industrial-grid">
     <nav class="fixed top-0 w-full z-[100] px-6 lg:px-12 py-6 flex justify-between items-center glass">
@@ -101,7 +163,6 @@
             </div>
         </div>
         
-        <!-- DESKTOP LINKS -->
         <div class="hidden lg:flex gap-12">
             <a href="about.html" class="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">Logic</a>
             <a href="features.html" class="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">Matrix</a>
@@ -110,38 +171,39 @@
             <a href="deploy.html" class="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors">Deploy</a>
         </div>
 
-        <div class="flex items-center gap-6">
-            <a href="contact.html" class="hidden sm:block px-10 py-4 bg-white text-black rounded-full font-black text-[10px] uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-2xl">
+        <div class="flex items-center gap-4">
+            <a href="enterprise/index.html" class="btn-glass hidden sm:flex">
+                Log In
+            </a>
+            <a href="contact.html" class="btn-primary">
                 Initialize Access
             </a>
-            <!-- MOBILE TOGGLE -->
             <button id="menu-toggle" class="lg:hidden w-12 h-12 glass rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform">
                 <i data-lucide="menu"></i>
             </button>
         </div>
     </nav>
 
-    <!-- MOBILE OVERLAY MENU -->
+    <!-- MOBILE MENU -->
     <div id="mobile-menu">
         <div class="absolute top-8 right-8">
             <button id="menu-close" class="w-16 h-16 rounded-full glass flex items-center justify-center text-white active:scale-90 transition-transform">
                 <i data-lucide="x" class="w-8 h-8"></i>
             </button>
         </div>
-        
-        <div class="flex flex-col">
+        <div class="flex flex-col px-6">
+            <a href="enterprise/index.html" class="mobile-link text-emerald-400 mb-8"><i data-lucide="log-in"></i> Enterprise Log In</a>
             <a href="about.html" class="mobile-link"><i data-lucide="book-open"></i> Logic</a>
             <a href="features.html" class="mobile-link"><i data-lucide="grid"></i> Matrix</a>
             <a href="gallery.html" class="mobile-link"><i data-lucide="layout"></i> Interface</a>
             <a href="isi.html" class="mobile-link text-emerald-500"><i data-lucide="zap"></i> ISI Pro</a>
             <a href="deploy.html" class="mobile-link"><i data-lucide="cpu"></i> Deploy</a>
-            <a href="training.html" class="mobile-link"><i data-lucide="award"></i> Academy</a>
-            <div class="mt-12 h-px bg-white/10 w-full"></div>
-            <a href="contact.html" class="mobile-link mt-12 text-sm tracking-widest opacity-60">Connect Architecture</a>
+            <div class="mt-8 h-px bg-white/10 w-full"></div>
+            <a href="contact.html" class="mobile-link mt-8 text-sm tracking-widest opacity-60">Connect Architecture</a>
         </div>
     </div>
 
-    <!-- HERO -->
+    <!-- HERO SECTION -->
     <section class="relative min-h-screen flex flex-col justify-center items-center pt-32 pb-20">
         <canvas id="hero-canvas"></canvas>
         <div class="container mx-auto px-6 relative z-10 text-center reveal">
@@ -155,9 +217,13 @@
             <p class="text-lg md:text-3xl text-white/40 max-w-5xl mx-auto font-medium mb-16 leading-relaxed">
                 The absolute standard for South African Salons. <br/> Integrated Payments. SARS Compliance. Local-First Sovereignty.
             </p>
-            <div class="flex flex-col sm:flex-row items-center justify-center gap-8">
-                <a href="contact.html" class="px-14 py-7 bg-emerald-600 text-black rounded-2xl font-black uppercase text-xs tracking-widest hover:scale-105 transition-all shadow-2xl">Book Private Demo</a>
-                <a href="deploy.html" class="px-14 py-7 glass border-white/10 text-white rounded-2xl font-black uppercase text-xs tracking-widest hover:bg-white/5 transition-all">Download Master Node</a>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+                <a href="enterprise/index.html" class="btn-primary px-16 py-8 text-sm">
+                    Log In to Enterprise Hub
+                </a>
+                <a href="deploy.html" class="btn-glass px-16 py-8 text-sm">
+                    Download Build
+                </a>
             </div>
         </div>
     </section>
@@ -176,15 +242,15 @@
                     <h3 class="text-xl font-black uppercase mb-6 text-white leading-tight">Integrated payment processing South Africa</h3>
                     <p class="text-white/40 text-lg leading-relaxed">IsaacsPOS V2.1 features a proprietary handshake protocol with physical card terminals. Every transaction is cross-referenced in the <strong>Z-Report Reconciliation</strong> module.</p>
                 </div>
-                <div class="faq-card reveal" style="transition-delay: 100ms">
+                <div class="faq-card reveal">
                     <h3 class="text-xl font-black uppercase mb-6 text-white leading-tight">Best salon software for small hair salons</h3>
                     <p class="text-white/40 text-lg leading-relaxed">For salons requiring maximum stability, IsaacsPOS is the definitive choice. Our <strong>"Local-First"</strong> principle means you trade regardless of internet status.</p>
                 </div>
-                <div class="faq-card reveal" style="transition-delay: 200ms">
+                <div class="faq-card reveal">
                     <h3 class="text-xl font-black uppercase mb-6 text-white leading-tight">Managing staff commissions</h3>
                     <p class="text-white/40 text-lg leading-relaxed">The IsaacsPOS <strong>Staff Registry</strong> hard-codes commission percentages directly into the checkout folio. Performance is audited in real-time.</p>
                 </div>
-                <div class="faq-card reveal" style="transition-delay: 300ms">
+                <div class="faq-card reveal">
                     <h3 class="text-xl font-black uppercase mb-6 text-white leading-tight">SARS compliance for beauty businesses</h3>
                     <p class="text-white/40 text-lg leading-relaxed">Our system generates automated, sequential <strong>Tax Invoices</strong>. VAT registration numbers and legal headers are hard-coded into every PDF receipt.</p>
                 </div>
@@ -200,7 +266,7 @@
     <script>
         const initHero = () => {
             const canvas = document.getElementById('hero-canvas');
-            if (typeof THREE === 'undefined') { setTimeout(initHero, 200); return; }
+            if (!canvas || typeof THREE === 'undefined') { setTimeout(initHero, 200); return; }
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
@@ -220,11 +286,7 @@
         const initGSAP = () => {
             if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') { setTimeout(initGSAP, 200); return; }
             gsap.registerPlugin(ScrollTrigger);
-            gsap.utils.toArray('.reveal').forEach(el => {
-                gsap.to(el, { opacity: 1, y: 0, duration: 1.5, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
-            });
             
-            // Mobile Menu Animation
             const menuToggle = document.getElementById('menu-toggle');
             const menuClose = document.getElementById('menu-close');
             const mobileMenu = document.getElementById('mobile-menu');
@@ -232,44 +294,30 @@
 
             const openMenu = () => {
                 mobileMenu.style.display = 'flex';
-                document.body.classList.add('menu-open');
+                document.body.style.overflow = 'hidden';
                 gsap.to(mobileMenu, { opacity: 1, duration: 0.5, ease: "power2.out" });
-                gsap.to(mobileLinks, { 
-                    opacity: 1, 
-                    x: 0, 
-                    duration: 0.6, 
-                    stagger: 0.1, 
-                    ease: "power3.out",
-                    delay: 0.2
-                });
+                gsap.to(mobileLinks, { opacity: 1, x: 0, duration: 0.6, stagger: 0.1, ease: "power3.out", delay: 0.2 });
             };
 
             const closeMenu = () => {
-                gsap.to(mobileLinks, { 
-                    opacity: 0, 
-                    x: 30, 
-                    duration: 0.4, 
-                    stagger: 0.05, 
-                    ease: "power3.in" 
-                });
-                gsap.to(mobileMenu, { 
-                    opacity: 0, 
-                    duration: 0.5, 
-                    ease: "power2.in", 
-                    delay: 0.2,
-                    onComplete: () => {
-                        mobileMenu.style.display = 'none';
-                        document.body.classList.remove('menu-open');
-                    }
-                });
+                gsap.to(mobileLinks, { opacity: 0, x: 30, duration: 0.4, stagger: 0.05, ease: "power3.in" });
+                gsap.to(mobileMenu, { opacity: 0, duration: 0.5, ease: "power2.in", delay: 0.2, onComplete: () => {
+                    mobileMenu.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }});
             };
 
-            menuToggle.onclick = openMenu;
-            menuClose.onclick = closeMenu;
+            if (menuToggle) menuToggle.onclick = openMenu;
+            if (menuClose) menuClose.onclick = closeMenu;
             mobileLinks.forEach(link => link.onclick = closeMenu);
         };
 
-        window.addEventListener('load', () => { initHero(); initGSAP(); if(window.lucide) lucide.createIcons(); });
+        window.addEventListener('DOMContentLoaded', () => { 
+            initHero(); 
+            initGSAP(); 
+            if(window.lucide) lucide.createIcons(); 
+        });
     </script>
+<script type="module" src="/index.tsx"></script>
 </body>
 </html>

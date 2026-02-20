@@ -4,31 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Logic — The Isaacs & Partners Philosophy</title>
-    
-    <script type="importmap">
-    {
-      "imports": {
-        "@google/genai": "https://esm.sh/@google/genai@^1.41.0"
-      }
-    }
-    </script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --emerald: #10b981; --emerald-strong: #10b981; --dark-bg: #000000; }
-        body { background-color: var(--dark-bg); color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
+        :root { --emerald: #10b981; --dark: #000000; }
+        body { background-color: #000; color: #ffffff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
         .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .nav-link { transition: color 0.3s ease; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.2em; color: rgba(255,255,255,0.4); }
         .nav-link:hover { color: #fff; }
         .reveal { opacity: 0; transform: translateY(40px); }
         .phil-card { border: 1px solid rgba(255,255,255,0.05); padding: 50px; border-radius: 40px; background: rgba(255,255,255,0.01); }
-        .team-profile { border-bottom: 1px solid rgba(255,255,255,0.05); padding: 30px 0; }
-
-        /* Mobile Menu Styles */
+        
         #mobile-menu {
             position: fixed; top: 0; right: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(40px);
@@ -36,15 +25,25 @@
             padding: 40px; justify-content: center;
         }
         .mobile-link {
-            font-size: 2.5rem; font-weight: 900; text-transform: uppercase;
-            letter-spacing: -0.05em; margin: 15px 0; color: #ffffff;
+            font-size: 2rem; font-weight: 900; text-transform: uppercase;
+            letter-spacing: -0.05em; margin: 10px 0; color: #ffffff;
             opacity: 0; transform: translateX(30px);
             display: flex; align-items: center; gap: 20px;
-            transition: color 0.3s ease;
         }
-        .mobile-link:hover { color: var(--emerald); }
-        .mobile-link i { color: var(--emerald); width: 24px; height: 24px; }
         .menu-open body { overflow: hidden; }
+
+        .btn-primary {
+            background: #fff; color: #000; border-radius: 1.5rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.1em; padding: 14px 28px;
+            transition: all 0.3s ease; font-size: 10px; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-primary:hover { background: var(--emerald); color: #fff; transform: scale(1.05); box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3); }
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.03); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em;
+            padding: 14px 28px; transition: all 0.3s ease; font-size: 10px; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .btn-glass:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
     </style>
 </head>
 <body class="antialiased">
@@ -61,108 +60,58 @@
             <a href="isi.html" class="nav-link">ISI Pro</a>
             <a href="deploy.html" class="nav-link">Deploy</a>
         </div>
-        <div class="flex items-center gap-6">
-            <a href="contact.html" class="hidden sm:block px-8 py-3 bg-white text-black rounded-full font-black text-[10px] uppercase">Request Access</a>
-            <button id="menu-toggle" class="lg:hidden w-12 h-12 glass rounded-xl flex items-center justify-center text-white active:scale-95 transition-transform">
-                <i data-lucide="menu"></i>
-            </button>
+        <div class="flex items-center gap-4">
+            <a href="enterprise/index.html" class="btn-glass hidden sm:flex">Log In</a>
+            <a href="contact.html" class="btn-primary">Initialize Access</a>
+            <button id="menu-toggle" class="lg:hidden w-12 h-12 glass rounded-xl flex items-center justify-center text-white"><i data-lucide="menu"></i></button>
         </div>
     </nav>
 
-    <!-- MOBILE OVERLAY MENU -->
     <div id="mobile-menu">
-        <div class="absolute top-8 right-8">
-            <button id="menu-close" class="w-16 h-16 rounded-full glass flex items-center justify-center text-white active:scale-90 transition-transform">
-                <i data-lucide="x" class="w-8 h-8"></i>
-            </button>
-        </div>
-        <div class="flex flex-col">
+        <div class="absolute top-8 right-8"><button id="menu-close" class="w-16 h-16 rounded-full glass text-white"><i data-lucide="x"></i></button></div>
+        <div class="flex flex-col px-6">
+            <a href="enterprise/index.html" class="mobile-link text-emerald-400 mb-8"><i data-lucide="log-in"></i> Enterprise Log In</a>
             <a href="about.html" class="mobile-link text-emerald-500"><i data-lucide="book-open"></i> Logic</a>
             <a href="features.html" class="mobile-link"><i data-lucide="grid"></i> Matrix</a>
             <a href="gallery.html" class="mobile-link"><i data-lucide="layout"></i> Interface</a>
             <a href="isi.html" class="mobile-link"><i data-lucide="zap"></i> ISI Pro</a>
             <a href="deploy.html" class="mobile-link"><i data-lucide="cpu"></i> Deploy</a>
-            <a href="training.html" class="mobile-link"><i data-lucide="award"></i> Academy</a>
-            <div class="mt-12 h-px bg-white/10 w-full"></div>
-            <a href="contact.html" class="mobile-link mt-12 text-sm tracking-widest opacity-60">Connect Architecture</a>
+            <div class="mt-8 h-px bg-white/10 w-full"></div>
+            <a href="contact.html" class="mobile-link mt-8 text-sm tracking-widest opacity-60">Connect Architecture</a>
         </div>
     </div>
 
     <section class="pt-48 pb-40 container mx-auto px-6">
         <div class="max-w-4xl reveal">
-            <div class="text-emerald-500 font-black uppercase text-xs tracking-[0.5em] mb-6">Manifesto V2.1</div>
             <h1 class="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-none mb-12">Sovereign <br/><span class="text-emerald-500">Business Logic.</span></h1>
-            <p class="text-2xl text-white/50 leading-relaxed font-medium">We built IsaacsPOS for the salon owner who values data ownership above all else. In an era of fragile cloud-locked subscriptions, we offer the Gold Standard of local-first stability.</p>
+            <p class="text-2xl text-white/50 leading-relaxed font-medium">Local-first architecture for the modern salon owner. Experience 100% uptime with no cloud dependencies.</p>
         </div>
-
         <div class="grid md:grid-cols-2 gap-12 mt-40 reveal">
             <div class="phil-card">
                 <i data-lucide="database" class="text-emerald-500 mb-8 w-12 h-12"></i>
-                <h3 class="text-3xl font-black uppercase mb-6">The Local-First Mandate</h3>
-                <p class="text-white/40 text-lg leading-relaxed">Hosting data on an SQLite Master Node located physically in your salon eliminates the "No Internet, No Sales" bottleneck. We prioritize your ability to trade over our ability to track you.</p>
+                <h3 class="text-3xl font-black uppercase mb-6">Local-First Mandate</h3>
+                <p class="text-white/40 text-lg leading-relaxed">Trade offline. All financial data is encrypted on your hardware.</p>
             </div>
             <div class="phil-card">
                 <i data-lucide="shield-check" class="text-emerald-500 mb-8 w-12 h-12"></i>
-                <h3 class="text-3xl font-black uppercase mb-6">The Backup Creed</h3>
-                <p class="text-white/40 text-lg leading-relaxed">We advocate for physical USB backups. This is the only immutable defense against hardware theft or failure. Your data, your responsibility, your absolute security.</p>
-            </div>
-        </div>
-
-        <div class="mt-48 reveal">
-            <h3 class="text-4xl font-black uppercase mb-16 text-center md:text-left">Architectural Lineage</h3>
-            <div class="grid md:grid-cols-2 gap-24">
-                <div class="team-profile">
-                    <div class="text-emerald-500 font-black text-3xl mb-2">Maaliek</div>
-                    <div class="text-white/30 uppercase text-[10px] tracking-[0.4em] mb-6">Systems Architecture & Lead Engineering</div>
-                    <p class="text-white/50 text-sm leading-relaxed">Pioneer of the "Local-First" SQLite registry for retail. Maaliek oversees the core industrial logic and secure handshake protocols that power IsaacsPOS Enterprise.</p>
-                </div>
-                <div class="team-profile">
-                    <div class="text-emerald-500 font-black text-3xl mb-2">Stephanie</div>
-                    <div class="text-white/30 uppercase text-[10px] tracking-[0.4em] mb-6">Operational Strategy & Sales</div>
-                    <p class="text-white/50 text-sm leading-relaxed">Strategist for multi-salon scaling. Stephanie leads the operational training program and ensures every feature is built to solve real-world floor bottlenecks.</p>
-                </div>
+                <h3 class="text-3xl font-black uppercase mb-6">Backup Creed</h3>
+                <p class="text-white/40 text-lg leading-relaxed">Proprietary USB backup protocols ensure total disaster recovery in seconds.</p>
             </div>
         </div>
     </section>
 
-    <footer class="py-24 bg-black border-t border-white/5 text-center text-[9px] font-black uppercase tracking-[0.6em] opacity-30">© 2026 Isaacs & Partners Pty(Ltd).</footer>
-    
-    <script type="module" src="chatbot.js"></script>
     <script>
-        const initGSAP = () => {
-            if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') { setTimeout(initGSAP, 200); return; }
-            gsap.registerPlugin(ScrollTrigger);
-            gsap.utils.toArray('.reveal').forEach(el => {
-                gsap.to(el, { opacity: 1, y: 0, duration: 1.4, ease: "expo.out", scrollTrigger: { trigger: el, start: "top 95%" } });
-            });
-
-            // Mobile Menu Animation
-            const menuToggle = document.getElementById('menu-toggle');
-            const menuClose = document.getElementById('menu-close');
-            const mobileMenu = document.getElementById('mobile-menu');
-            const mobileLinks = document.querySelectorAll('.mobile-link');
-
-            const openMenu = () => {
-                mobileMenu.style.display = 'flex';
-                document.body.classList.add('menu-open');
-                gsap.to(mobileMenu, { opacity: 1, duration: 0.5, ease: "power2.out" });
-                gsap.to(mobileLinks, { opacity: 1, x: 0, duration: 0.6, stagger: 0.1, ease: "power3.out", delay: 0.2 });
-            };
-
-            const closeMenu = () => {
-                gsap.to(mobileLinks, { opacity: 0, x: 30, duration: 0.4, stagger: 0.05, ease: "power3.in" });
-                gsap.to(mobileMenu, { opacity: 0, duration: 0.5, ease: "power2.in", delay: 0.2, onComplete: () => {
-                    mobileMenu.style.display = 'none';
-                    document.body.classList.remove('menu-open');
-                }});
-            };
-
-            if(menuToggle) menuToggle.onclick = openMenu;
-            if(menuClose) menuClose.onclick = closeMenu;
-            mobileLinks.forEach(link => link.onclick = closeMenu);
-        };
-
-        window.addEventListener('load', () => { initGSAP(); if(window.lucide) lucide.createIcons(); });
+        window.addEventListener('load', () => {
+            if (window.lucide) lucide.createIcons();
+            const mt = document.getElementById('menu-toggle');
+            const mc = document.getElementById('menu-close');
+            const mm = document.getElementById('mobile-menu');
+            const links = document.querySelectorAll('.mobile-link');
+            const open = () => { mm.style.display = 'flex'; gsap.to(mm, {opacity:1}); gsap.to(links,{opacity:1,x:0,stagger:0.1}); };
+            const close = () => { gsap.to(links,{opacity:0,x:30}); gsap.to(mm,{opacity:0,onComplete:()=>mm.style.display='none'}); };
+            mt.onclick = open; mc.onclick = close;
+            gsap.to('.reveal', {opacity:1,y:0,duration:1,stagger:0.2});
+        });
     </script>
 </body>
 </html>

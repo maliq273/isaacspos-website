@@ -24,28 +24,41 @@
     box-shadow: 0 50px 100px rgba(0,0,0,1);
 }
 
+/* CRITICAL FIX: Explicit Input Visibility */
 .auth-input {
     width: 100%;
-    background: #ffffff !important;
-    border: 1px solid #e5e7eb;
+    background-color: #ffffff !important; /* Force white background */
+    color: #000000 !important;           /* Force absolute black text */
+    caret-color: #000000 !important;      /* Force black blinking cursor */
+    border: 1px solid #d1d5db;
     border-radius: 20px;
     padding: 22px 28px;
-    color: #000000 !important;
-    caret-color: #000000;
     outline: none;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 16px;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    color-scheme: light;                 /* Tells browser to treat this element as light-mode */
 }
 
+/* Handle Placeholder Color */
 .auth-input::placeholder {
-    color: #9ca3af;
+    color: #6b7280 !important;           /* Medium grey for placeholder */
     font-weight: 500;
+}
+
+/* Ensure Visibility during Autofill (Browsers often force yellow/white backgrounds) */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover, 
+.auth-input:-webkit-autofill:focus, 
+.auth-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: black !important;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .auth-input:focus {
     border-color: var(--emerald);
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
 }
 
 /* Dashboard Specifics */

@@ -23,34 +23,41 @@ let state = {
 let revenueChart = null;
 
 async function initDashboard() {
-    // 1. Session Validation
-    console.log("Verifying Matrix Access...");
-    const { data: { session }, error } = await supabase.auth.getSession();
+    console.log("Verifying Matrix Access Protocol...");
     
-    if (error || !session) {
-        console.warn("Session invalid. Reverting to Login Node.");
-        window.location.replace("index.html");
+    // FAIL-SAFE SESSION RETRY
+    let sessionResult = await supabase.auth.getSession();
+    
+    if (!sessionResult.data.session) {
+        console.log("Session not found immediately. Initiating 1s Grace Period...");
+        await new Promise(r => setTimeout(r, 1000));
+        sessionResult = await supabase.auth.getSession();
+    }
+
+    if (!sessionResult.data.session) {
+        console.error("Access Denied. Reverting to Login Node.");
+        window.location.href = "index.html";
         return;
     }
 
-    state.user = session.user;
+    state.user = sessionResult.data.session.user;
+    console.log("Access Granted: " + state.user.email);
     
-    // UI Greetings & Initial Setup
+    // UI Greetings
     const welcomeEl = document.getElementById('current-tab-title');
-    if (welcomeEl) welcomeEl.textContent = `Master Node: ${state.user.email.split('@')[0].toUpperCase()}`;
+    if (welcomeEl) welcomeEl.textContent = `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
 
-    // 2. Load Core Infrastructure
+    // Load Infrastructure
     await fetchBranches();
     setRange(7);
     await refreshData();
     
-    // 3. UI Interactions
+    // Initialize UI
     initUIEvents();
     if (window.lucide) lucide.createIcons();
 }
 
 async function fetchBranches() {
-    // In production, fetch from Supabase 'branches' table
     state.branches = [
         { id: 'b1', name: 'Sandton Master Node' },
         { id: 'b2', name: 'Cape Town Waterfront' },
@@ -59,7 +66,6 @@ async function fetchBranches() {
     
     const selector = document.getElementById('branch-selector');
     if (selector) {
-        // Clear except first
         selector.innerHTML = '<option value="all">Global Matrix (All Branches)</option>';
         state.branches.forEach(b => {
             const opt = document.createElement('option');
@@ -85,7 +91,6 @@ function setRange(days) {
 }
 
 async function refreshData() {
-    // Simulate fetching and aggregating multi-branch data
     generateMockData();
     renderAll();
 }
@@ -136,7 +141,6 @@ function renderAll() {
         txs = txs.filter(t => t.branchId === state.selectedBranchId);
     }
 
-    // Dynamic Aggregation
     const totalRev = txs.reduce((acc, t) => acc + t.amount, 0);
     const totalTips = txs.reduce((acc, t) => acc + t.tip, 0);
     const invValue = state.data.inventory
@@ -294,25 +298,20 @@ function renderRecon() {
 }
 
 function initUIEvents() {
-    // Navigation
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.onclick = () => {
             const tab = btn.dataset.tab;
             if (tab === 'settings') return;
-
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             const targetTab = document.getElementById(`tab-${tab}`);
             if (targetTab) targetTab.classList.remove('hidden');
-            
             const titleEl = document.getElementById('current-tab-title');
             if (titleEl) titleEl.textContent = btn.innerText;
         };
     });
 
-    // Branch Selector
     const bSel = document.getElementById('branch-selector');
     if (bSel) {
         bSel.onchange = (e) => {
@@ -321,15 +320,12 @@ function initUIEvents() {
         };
     }
 
-    // Range Filter
     document.querySelectorAll('.filter-pill').forEach(pill => {
         pill.onclick = () => {
             document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-
             const range = pill.dataset.range;
             const customBox = document.getElementById('custom-date-container');
-            
             if (range === 'custom') {
                 if (customBox) customBox.classList.remove('hidden');
             } else {
@@ -345,24 +341,20 @@ function initUIEvents() {
     const eIn = document.getElementById('end-date');
     if (sIn) sIn.onchange = () => {
         state.startDate = sIn.value;
-        state.range = Math.ceil((new Date(state.endDate) - new Date(state.startDate)) / (1000 * 60 * 60 * 24));
         refreshData();
     };
     if (eIn) eIn.onchange = () => {
         state.endDate = eIn.value;
-        state.range = Math.ceil((new Date(state.endDate) - new Date(state.startDate)) / (1000 * 60 * 60 * 24));
         refreshData();
     };
 
-    // Logout
     const lBtn = document.getElementById('logout-btn');
     if (lBtn) {
         lBtn.onclick = async () => {
             await supabase.auth.signOut();
-            window.location.replace("index.html");
+            window.location.href = "index.html";
         };
     }
 }
 
-// Ensure execution
 initDashboard();

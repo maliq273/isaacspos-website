@@ -1,7 +1,14 @@
 // IsaacsPOS Enterprise Dashboard Logic
 const supabase = window.supabase.createClient(
-    "https://pespysgaqfstachvnsvr.supabase.co", 
-    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
+    "https://pespysgaqfstachvnsvr.supabase.co",
+    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d",
+    {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+        }
+    }
 );
 
 // State Management
@@ -23,22 +30,22 @@ let state = {
 let revenueChart = null;
 
 async function initDashboard() {
-    console.log("Verifying Matrix Access Protocol...");
-    
-    // FAIL-SAFE SESSION RETRY
-    let sessionResult = await supabase.auth.getSession();
-    
-    if (!sessionResult.data.session) {
-        console.log("Session not found immediately. Initiating 1s Grace Period...");
-        await new Promise(r => setTimeout(r, 1000));
-        sessionResult = await supabase.auth.getSession();
-    }
+    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!sessionResult.data.session) {
-        console.error("Access Denied. Reverting to Login Node.");
-        window.location.href = "index.html";
+    if (!session) {
+        window.location.replace("index.html");
         return;
     }
+
+    state.user = session.user;
+
+    await fetchBranches();
+    setRange(7);
+    await refreshData();
+    initUIEvents();
+
+    if (window.lucide) lucide.createIcons();
+}
 
     state.user = sessionResult.data.session.user;
     console.log("Access Granted: " + state.user.email);

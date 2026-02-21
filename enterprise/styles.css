@@ -1,7 +1,7 @@
 :root {
     --emerald: #10b981;
-    --dark: #050505;
-    --card-bg: #080808;
+    --dark: #000000;
+    --card-bg: #0a0a0a;
 }
 
 .industrial-grid {
@@ -18,40 +18,44 @@
 
 .auth-card {
     background: var(--card-bg);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: 4rem;
-    padding: 60px;
-    box-shadow: 0 50px 100px rgba(0,0,0,1);
+    border: 2px solid rgba(16, 185, 129, 0.3);
+    border-radius: 3rem;
+    padding: 50px;
+    box-shadow: 0 40px 100px rgba(0,0,0,1);
+    position: relative;
+    z-index: 10;
 }
 
-/* ABSOLUTE CONTRAST OVERRIDE FOR LEGIBILITY */
+/* ABSOLUTE LEGIBILITY: White background, Bold Black text */
 .auth-input {
     width: 100%;
-    background-color: #FFFFFF !important; /* Absolute White */
-    color: #000000 !important;           /* Absolute Black */
-    caret-color: #000000 !important;      /* Absolute Black Cursor */
-    border: 2px solid #E5E7EB;           /* Visible Gray Border */
-    border-radius: 24px;
-    padding: 24px 32px;
+    background-color: #FFFFFF !important;
+    color: #000000 !important;
+    caret-color: #000000 !important;
+    border: 3px solid #E5E7EB;
+    border-radius: 18px;
+    padding: 24px 28px;
     outline: none;
-    font-weight: 800;                     /* Extra Bold for clarity */
-    font-size: 18px;                      /* Large for clarity */
-    transition: all 0.2s ease-in-out;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+    font-weight: 900;
+    font-size: 20px;
+    display: block;
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
 }
 
 .auth-input:focus {
     border-color: var(--emerald);
-    background-color: #FFFFFF !important;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.2);
 }
 
 .auth-input::placeholder {
-    color: #9CA3AF !important;           /* Subtle Gray Placeholder */
+    color: #9CA3AF !important;
     font-weight: 600;
 }
 
-/* Chrome/Safari Autofill Fixes */
+/* Force Autofill Styles */
 .auth-input:-webkit-autofill,
 .auth-input:-webkit-autofill:hover, 
 .auth-input:-webkit-autofill:focus, 
@@ -121,15 +125,6 @@
     border-color: var(--emerald);
     color: var(--emerald);
     background: rgba(16, 185, 129, 0.05);
-}
-
-.reveal {
-    animation: revealAnim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes revealAnim {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {

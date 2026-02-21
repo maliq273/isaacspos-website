@@ -30,16 +30,18 @@
                 <div class="space-y-2">
                     <label class="text-[9px] font-black uppercase tracking-[0.4em] text-white/30 ml-2">Access Email</label>
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40"></i>
+                        <!-- Darker icon for white background -->
+                        <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/60 z-10 pointer-events-none"></i>
                         <input type="email" id="email" required placeholder="admin@salon.co.za" class="auth-input pl-14">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[9px] font-black uppercase tracking-[0.4em] text-white/30 ml-2">Secure Cipher</label>
                     <div class="relative">
-                        <i data-lucide="lock" class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/40"></i>
+                        <!-- Darker icon for white background -->
+                        <i data-lucide="lock" class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/60 z-10 pointer-events-none"></i>
                         <input type="password" id="password" required placeholder="••••••••" class="auth-input px-14">
-                        <button type="button" id="toggle-password" class="absolute right-6 top-1/2 -translate-y-1/2 text-black/40 hover:text-black transition-colors">
+                        <button type="button" id="toggle-password" class="absolute right-6 top-1/2 -translate-y-1/2 text-black/60 hover:text-black transition-colors z-20">
                             <i data-lucide="eye" class="w-4 h-4"></i>
                         </button>
                     </div>

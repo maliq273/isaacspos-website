@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Dashboard — IsaacsPOS</title>
+    <title>Enterprise Hub — IsaacsPOS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#050505] text-white">
+<body class="bg-[#050505] text-white selection:bg-emerald-500 selection:text-black">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <aside class="w-80 glass border-r border-white/5 flex flex-col p-8 hidden lg:flex">
@@ -25,10 +26,12 @@
             </div>
 
             <nav class="flex-1 space-y-4">
-                <a href="#" class="nav-btn active"><i data-lucide="layout-grid"></i> Registry Overview</a>
-                <a href="#" class="nav-btn"><i data-lucide="users"></i> Salon Network</a>
-                <a href="#" class="nav-btn"><i data-lucide="bar-chart-3"></i> Global Stats</a>
-                <a href="#" class="nav-btn"><i data-lucide="settings"></i> Cloud Settings</a>
+                <div class="nav-btn active" data-tab="performance"><i data-lucide="layout-grid"></i> Performance</div>
+                <div class="nav-btn" data-tab="journal"><i data-lucide="book-open"></i> Sales Journal</div>
+                <div class="nav-btn" data-tab="team"><i data-lucide="users"></i> Team Stats</div>
+                <div class="nav-btn" data-tab="recon"><i data-lucide="shield-check"></i> Recon Logs</div>
+                <div class="pt-8 opacity-20 uppercase text-[9px] font-black tracking-widest border-t border-white/5 mt-8">Configuration</div>
+                <div class="nav-btn" data-tab="settings"><i data-lucide="settings"></i> System Node</div>
             </nav>
 
             <div class="mt-auto pt-8 border-t border-white/5">
@@ -40,65 +43,137 @@
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-y-auto industrial-grid">
-            <header class="p-8 flex justify-between items-center glass lg:bg-transparent lg:backdrop-blur-none border-b border-white/5 lg:border-none">
-                <div>
-                    <h2 class="text-2xl font-black uppercase tracking-tighter">System Health</h2>
-                    <p class="text-white/30 text-xs font-bold uppercase tracking-widest mt-1">Status: <span class="text-emerald-500">Authenticated & Active</span></p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div id="user-display" class="hidden sm:flex flex-col items-end">
-                        <span id="user-email" class="text-xs font-black text-white/80">---</span>
-                        <span class="text-[8px] font-bold text-emerald-500 uppercase tracking-widest">Master Node</span>
+            <!-- Header Filters -->
+            <header class="p-8 sticky top-0 z-50 glass border-b border-white/5 flex flex-wrap justify-between items-center gap-6">
+                <div class="flex flex-col">
+                    <h2 id="current-tab-title" class="text-2xl font-black uppercase tracking-tighter">Performance Hub</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-[9px] font-black text-white/40 uppercase tracking-widest">Master Uplink Optimal</span>
                     </div>
-                    <div class="w-12 h-12 glass rounded-2xl flex items-center justify-center border-emerald-500/20">
-                        <i data-lucide="user" class="text-emerald-500"></i>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-4 bg-white/5 p-2 rounded-2xl">
+                    <div class="flex items-center gap-2 px-4 border-r border-white/10">
+                        <i data-lucide="home" class="w-4 h-4 text-emerald-500"></i>
+                        <select id="branch-selector" class="bg-transparent text-[10px] font-black uppercase outline-none cursor-pointer text-white/60 hover:text-white transition-colors">
+                            <option value="all">Global Matrix (All Branches)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center gap-2">
+                        <div class="filter-pills flex gap-1">
+                            <div class="filter-pill active" data-range="7">7D</div>
+                            <div class="filter-pill" data-range="14">14D</div>
+                            <div class="filter-pill" data-range="30">30D</div>
+                            <div class="filter-pill" data-range="custom">Custom</div>
+                        </div>
+                        <div id="custom-date-container" class="hidden flex items-center gap-2 ml-2">
+                            <input type="date" id="start-date" class="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] font-bold">
+                            <span class="opacity-20 text-[10px]">—</span>
+                            <input type="date" id="end-date" class="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] font-bold">
+                        </div>
                     </div>
                 </div>
             </header>
 
-            <div class="p-8 space-y-8 max-w-7xl mx-auto w-full">
-                <!-- Stat Cards -->
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <div class="stat-card">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[9px] font-black uppercase tracking-widest text-white/30">Network Revenue</span>
-                            <i data-lucide="trending-up" class="w-4 h-4 text-emerald-500"></i>
+            <div class="p-8 space-y-12 max-w-7xl mx-auto w-full">
+                
+                <!-- PERFORMANCE TAB -->
+                <div id="tab-performance" class="tab-content space-y-12 reveal">
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="dashboard-card">
+                            <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Gross Revenue</div>
+                            <div class="text-4xl font-black tracking-tighter text-white" id="stat-revenue">R0.00</div>
+                            <div class="mt-4 text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Real-time Yield</div>
                         </div>
-                        <div class="text-4xl font-black tracking-tighter">R0.00</div>
-                        <div class="mt-2 text-[10px] text-emerald-500 font-bold uppercase tracking-widest">+0% System Yield</div>
+                        <div class="dashboard-card">
+                            <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Total Tips Logged</div>
+                            <div class="text-4xl font-black tracking-tighter text-white" id="stat-tips">R0.00</div>
+                            <div class="mt-4 text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Staff Performance</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Inventory Value</div>
+                            <div class="text-4xl font-black tracking-tighter text-white" id="stat-inventory">R0.00</div>
+                            <div class="mt-4 text-[9px] font-bold text-white/20 uppercase tracking-widest">Asset Liquidity</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Daily Average</div>
+                            <div class="text-4xl font-black tracking-tighter text-white" id="stat-avg">R0.00</div>
+                            <div class="mt-4 text-[9px] font-bold text-white/20 uppercase tracking-widest">Revenue Velocity</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[9px] font-black uppercase tracking-widest text-white/30">Active Salons</span>
-                            <i data-lucide="home" class="w-4 h-4 text-emerald-500"></i>
+
+                    <div class="dashboard-card overflow-hidden">
+                        <div class="flex justify-between items-center mb-10">
+                            <div>
+                                <h3 class="text-xl font-black uppercase">Revenue Velocity</h3>
+                                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">Daily Breakdown for period</p>
+                            </div>
+                            <i data-lucide="trending-up" class="w-6 h-6 text-emerald-500"></i>
                         </div>
-                        <div class="text-4xl font-black tracking-tighter">0</div>
-                        <div class="mt-2 text-[10px] text-white/20 font-bold uppercase tracking-widest">Global Master Node</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="text-[9px] font-black uppercase tracking-widest text-white/30">Cloud Sync Status</span>
-                            <i data-lucide="refresh-cw" class="w-4 h-4 text-emerald-500 animate-spin"></i>
+                        <div class="h-80 w-full">
+                            <canvas id="revenue-chart"></canvas>
                         </div>
-                        <div class="text-4xl font-black tracking-tighter">100%</div>
-                        <div class="mt-2 text-[10px] text-emerald-500 font-bold uppercase tracking-widest">Uplink Stable</div>
                     </div>
                 </div>
 
-                <!-- Main Section -->
-                <div class="glass rounded-[3rem] border-white/5 overflow-hidden">
-                    <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
-                        <h3 class="font-black uppercase tracking-widest text-xs">Recent Enterprise Handshakes</h3>
-                        <button class="text-[10px] font-black uppercase tracking-widest text-emerald-500">Full Registry <i data-lucide="external-link" class="inline w-3 h-3 ml-1"></i></button>
-                    </div>
-                    <div class="p-12 text-center">
-                        <div class="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 opacity-20">
-                            <i data-lucide="database" class="w-10 h-10"></i>
+                <!-- SALES JOURNAL TAB -->
+                <div id="tab-journal" class="tab-content hidden reveal">
+                    <div class="dashboard-card">
+                        <div class="flex justify-between items-center mb-8">
+                            <h3 class="text-xl font-black uppercase">Transactional Registry</h3>
+                            <button class="px-6 py-2 glass border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-white/5">Export CSV</button>
                         </div>
-                        <p class="text-white/30 font-bold text-sm">No operational data detected in this registry node.</p>
-                        <p class="text-[10px] uppercase tracking-widest text-white/10 mt-2">Initialize Local Terminals to sync cloud analytics.</p>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="border-b border-white/5 text-[10px] font-black uppercase text-white/30 tracking-widest">
+                                    <tr>
+                                        <th class="pb-6">Date</th>
+                                        <th class="pb-6">Folio #</th>
+                                        <th class="pb-6">Professional</th>
+                                        <th class="pb-6">Method</th>
+                                        <th class="pb-6 text-right">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="journal-tbody" class="text-sm font-medium">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
+
+                <!-- TEAM STATS TAB -->
+                <div id="tab-team" class="tab-content hidden reveal">
+                    <div class="grid md:grid-cols-1 gap-8" id="team-stats-grid">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+
+                <!-- RECON LOGS TAB -->
+                <div id="tab-recon" class="tab-content hidden reveal">
+                    <div class="dashboard-card">
+                        <h3 class="text-xl font-black uppercase mb-8">Audit Reconciliation History</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="border-b border-white/5 text-[10px] font-black uppercase text-white/30 tracking-widest">
+                                    <tr>
+                                        <th class="pb-6">Date</th>
+                                        <th class="pb-6">Branch</th>
+                                        <th class="pb-6">System Total</th>
+                                        <th class="pb-6">Variance</th>
+                                        <th class="pb-6 text-right">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recon-tbody" class="text-sm font-medium">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>

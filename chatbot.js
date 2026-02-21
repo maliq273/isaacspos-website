@@ -14,6 +14,12 @@ CORE SYSTEM KNOWLEDGE:
 - CONTACT: Sales/Support: Stephanie (+27 79 318 5281). Architecture: Maaliek (+27 71 883 1097).
 - EMAIL: info@isaacsandpartners.online.
 
+CURRENT CONTEXT: 
+You are assisting a user on the "${window.location.pathname}" node of the website. 
+If they are on "deploy.html", prioritize setup hardware specs.
+If they are on "isi.html", prioritize marketing AI benefits.
+If they are on "enterprise/index.html", prioritize secure authentication support.
+
 GOAL: Provide technical help or capture leads for new installations.
 
 LEAD EXTRACTION PROTOCOL:
@@ -39,85 +45,88 @@ class ISIChatbot {
         chatContainer.innerHTML = `
             <style>
                 #isi-launcher {
-                    position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px;
-                    background: #10b981; border-radius: 24px; cursor: pointer; z-index: 100000;
+                    position: fixed; bottom: 30px; right: 30px; width: 75px; height: 75px;
+                    background: #10b981; border-radius: 26px; cursor: pointer; z-index: 100000;
                     display: flex; align-items: center; justify-content: center;
-                    box-shadow: 0 15px 35px rgba(16, 185, 129, 0.4);
+                    box-shadow: 0 15px 45px rgba(16, 185, 129, 0.5);
                     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 }
                 #isi-launcher:hover { transform: scale(1.1) rotate(5deg); background: #059669; }
                 
                 #isi-bubble {
-                    position: fixed; bottom: 110px; right: 30px; background: #fff; color: #000;
-                    padding: 15px 25px; border-radius: 25px 25px 0 25px; font-weight: 800;
+                    position: fixed; bottom: 120px; right: 30px; background: #fff; color: #000;
+                    padding: 18px 30px; border-radius: 25px 25px 0 25px; font-weight: 800;
                     font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em;
-                    z-index: 100000; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-                    opacity: 0; transform: translateY(20px); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    z-index: 100000; box-shadow: 0 25px 50px rgba(0,0,0,0.7);
+                    opacity: 0; transform: translateY(30px); transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
                     pointer-events: none; border: 1px solid rgba(0,0,0,0.05);
                 }
                 #isi-bubble.show { opacity: 1; transform: translateY(0); }
 
                 #isi-launcher .status-dot {
-                    position: absolute; top: 15px; right: 15px; width: 12px; height: 12px;
-                    background: #fff; border-radius: 50%; border: 2px solid #10b981;
+                    position: absolute; top: 18px; right: 18px; width: 14px; height: 14px;
+                    background: #fff; border-radius: 50%; border: 3px solid #10b981;
                     animation: isi-pulse 2s infinite;
                 }
-                @keyframes isi-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+                @keyframes isi-pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
                 
                 #isi-window {
-                    position: fixed; bottom: 120px; right: 30px; width: 420px; height: 650px;
-                    background: rgba(5, 5, 5, 0.98); backdrop-filter: blur(50px);
-                    border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 40px;
+                    position: fixed; bottom: 120px; right: 30px; width: 440px; height: 680px;
+                    background: rgba(5, 5, 5, 0.99); backdrop-filter: blur(50px);
+                    border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 45px;
                     z-index: 99999; display: none; flex-direction: column; overflow: hidden;
-                    box-shadow: 0 40px 120px rgba(0,0,0,1);
+                    box-shadow: 0 50px 150px rgba(0,0,0,1);
                 }
                 .isi-header {
-                    padding: 30px; background: linear-gradient(135deg, #10b981, #064e3b);
+                    padding: 35px; background: linear-gradient(135deg, #10b981, #064e3b);
                     display: flex; justify-content: space-between; align-items: center;
                 }
                 .isi-messages {
-                    flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+                    flex: 1; padding: 35px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px;
                     scrollbar-width: thin; scrollbar-color: #10b981 transparent;
                 }
-                .msg { padding: 18px 24px; border-radius: 22px; font-size: 14px; line-height: 1.6; max-width: 85%; }
-                .msg-ai { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.05); align-self: flex-start; }
-                .msg-user { background: #10b981; color: #000; font-weight: 700; align-self: flex-end; }
+                .msg { padding: 20px 28px; border-radius: 24px; font-size: 14px; line-height: 1.7; max-width: 88%; }
+                .msg-ai { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.95); border: 1px solid rgba(255,255,255,0.05); align-self: flex-start; }
+                .msg-user { background: #10b981; color: #000; font-weight: 800; align-self: flex-end; }
                 
-                .isi-input-area { padding: 30px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 12px; background: rgba(0,0,0,0.2); }
+                .isi-input-area { padding: 35px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 15px; background: rgba(0,0,0,0.3); }
                 .isi-input {
-                    flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-                    border-radius: 20px; padding: 18px 24px; color: white; outline: none; font-size: 14px;
+                    flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 22px; padding: 20px 28px; color: white; outline: none; font-size: 14px;
+                    transition: border-color 0.3s ease;
                 }
                 .isi-input:focus { border-color: #10b981; }
                 .isi-send {
-                    width: 55px; height: 55px; background: #10b981; border-radius: 18px;
+                    width: 60px; height: 60px; background: #10b981; border-radius: 20px;
                     display: flex; align-items: center; justify-content: center; cursor: pointer; border: none;
                     transition: all 0.3s ease;
                 }
-                .isi-send:hover { background: #059669; transform: scale(1.05); }
+                .isi-send:hover { background: #059669; transform: scale(1.08); }
+                
+                .system-check { font-size: 9px; font-weight: 900; letter-spacing: 0.2em; color: rgba(16,185,129,0.8); margin-bottom: 4px; text-transform: uppercase; }
             </style>
             
-            <div id="isi-bubble">Uplink established. Need help?</div>
+            <div id="isi-bubble">Uplink established. How can I facilitate your salon?</div>
 
             <div id="isi-window">
                 <div class="isi-header">
                     <div>
-                        <div style="font-size: 10px; font-weight: 900; letter-spacing: 0.3em; color: rgba(255,255,255,0.7); text-transform: uppercase;">System AI Uplink</div>
-                        <div style="font-size: 18px; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: -0.02em;">ISI Assistant V2.1</div>
+                        <div class="system-check">Operational Integrity: OPTIMAL</div>
+                        <div style="font-size: 20px; font-weight: 900; color: white; text-transform: uppercase; letter-spacing: -0.02em;">ISI Assistant V2.1</div>
                     </div>
-                    <div id="isi-close" style="cursor: pointer; opacity: 0.5; padding: 10px;"><i data-lucide="x"></i></div>
+                    <div id="isi-close" style="cursor: pointer; opacity: 0.6; padding: 10px;"><i data-lucide="x"></i></div>
                 </div>
                 <div class="isi-messages" id="isi-msgs">
-                    <div class="msg msg-ai">Uplink established. System status: **OPTIMAL**. I am **ISI**, the high-fidelity AI architect for IsaacsPOS. How can I facilitate your salon's digital architecture today?</div>
+                    <div class="msg msg-ai">Uplink established. System status: **STABLE**. I am **ISI**, the AI architect. Analyzing node context: **${window.location.pathname.includes('deploy') ? 'DEPLOYMENT' : 'OPERATIONAL'}**. How can I assist?</div>
                 </div>
                 <div class="isi-input-area">
-                    <input type="text" class="isi-input" id="isi-in" placeholder="Type technical command...">
+                    <input type="text" class="isi-input" id="isi-in" placeholder="Query the Registry...">
                     <button class="isi-send" id="isi-btn"><i data-lucide="send" style="color: black;"></i></button>
                 </div>
             </div>
             
             <div id="isi-launcher">
-                <i data-lucide="brain-circuit" style="color: white; width: 34px; height: 34px;"></i>
+                <i data-lucide="brain-circuit" style="color: white; width: 36px; height: 36px;"></i>
                 <div class="status-dot"></div>
             </div>
         `;
@@ -141,9 +150,15 @@ class ISIChatbot {
 
         if (window.lucide) lucide.createIcons();
 
-        // Proactive engagement bubble after 4 seconds
+        // More aggressive proactive engagement
         setTimeout(() => {
-            if(!this.isOpen) bubble.classList.add('show');
+            if(!this.isOpen) {
+                const bubbleText = window.location.pathname.includes('deploy') 
+                    ? "Ready to deploy your Master Node?" 
+                    : "Uplink established. How can I facilitate your salon?";
+                bubble.innerText = bubbleText;
+                bubble.classList.add('show');
+            }
         }, 4000);
     }
 
@@ -178,7 +193,7 @@ class ISIChatbot {
 
             loadingMsg.innerHTML = reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         } catch(e) {
-            loadingMsg.innerHTML = "Uplink failure. Please check your system's network connectivity.";
+            loadingMsg.innerHTML = "Uplink interruption. Please verify your network handshake.";
         }
     }
 

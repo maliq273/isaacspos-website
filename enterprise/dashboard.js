@@ -9,7 +9,7 @@ let state = {
     user: null,
     branches: [],
     selectedBranchId: 'all',
-    range: 7, // 7, 14, 30, 'custom'
+    range: 7, 
     startDate: null,
     endDate: null,
     data: {
@@ -23,29 +23,34 @@ let state = {
 let revenueChart = null;
 
 async function initDashboard() {
-    // 1. Auth Check
+    // 1. Session Validation
+    console.log("Verifying Matrix Access...");
     const { data: { session }, error } = await supabase.auth.getSession();
+    
     if (error || !session) {
-        window.location.href = "index.html";
+        console.warn("Session invalid. Reverting to Login Node.");
+        window.location.replace("index.html");
         return;
     }
+
     state.user = session.user;
-    document.getElementById('user-email').textContent = state.user.email;
-
-    // 2. Fetch Core Infrastructure (Branches)
-    await fetchBranches();
     
-    // 3. Set Default Dates
-    setRange(7);
+    // UI Greetings & Initial Setup
+    const welcomeEl = document.getElementById('current-tab-title');
+    if (welcomeEl) welcomeEl.textContent = `Master Node: ${state.user.email.split('@')[0].toUpperCase()}`;
 
-    // 4. Initial Load
+    // 2. Load Core Infrastructure
+    await fetchBranches();
+    setRange(7);
     await refreshData();
-    lucide.createIcons();
+    
+    // 3. UI Interactions
     initUIEvents();
+    if (window.lucide) lucide.createIcons();
 }
 
 async function fetchBranches() {
-    // Simulated fetch from 'branches' table
+    // In production, fetch from Supabase 'branches' table
     state.branches = [
         { id: 'b1', name: 'Sandton Master Node' },
         { id: 'b2', name: 'Cape Town Waterfront' },
@@ -53,12 +58,16 @@ async function fetchBranches() {
     ];
     
     const selector = document.getElementById('branch-selector');
-    state.branches.forEach(b => {
-        const opt = document.createElement('option');
-        opt.value = b.id;
-        opt.textContent = b.name;
-        selector.appendChild(opt);
-    });
+    if (selector) {
+        // Clear except first
+        selector.innerHTML = '<option value="all">Global Matrix (All Branches)</option>';
+        state.branches.forEach(b => {
+            const opt = document.createElement('option');
+            opt.value = b.id;
+            opt.textContent = b.name;
+            selector.appendChild(opt);
+        });
+    }
 }
 
 function setRange(days) {
@@ -69,20 +78,20 @@ function setRange(days) {
     state.startDate = start.toISOString().split('T')[0];
     state.endDate = end.toISOString().split('T')[0];
     
-    document.getElementById('start-date').value = state.startDate;
-    document.getElementById('end-date').value = state.endDate;
+    const sInput = document.getElementById('start-date');
+    const eInput = document.getElementById('end-date');
+    if (sInput) sInput.value = state.startDate;
+    if (eInput) eInput.value = state.endDate;
 }
 
 async function refreshData() {
-    // In production, these would be filtered queries to Supabase
-    // We generate deterministic mock data based on the owner/branch context for this demo
+    // Simulate fetching and aggregating multi-branch data
     generateMockData();
     renderAll();
 }
 
 function generateMockData() {
-    // Simulate high-fidelity datasets
-    const txCount = state.range === 'custom' ? 50 : state.range * 15;
+    const txCount = state.range === 'custom' ? 100 : state.range * 25;
     state.data.transactions = [];
     state.data.staff = [
         { id: 's1', name: 'M. Isaacs', branchId: 'b1' },
@@ -93,13 +102,13 @@ function generateMockData() {
 
     for (let i = 0; i < txCount; i++) {
         const date = new Date(state.startDate);
-        date.setDate(date.getDate() + Math.floor(Math.random() * state.range));
+        date.setDate(date.getDate() + Math.floor(Math.random() * (state.range || 1)));
         
         state.data.transactions.push({
-            id: `FL-${1000 + i}`,
+            id: `FL-${5000 + i}`,
             date: date.toISOString().split('T')[0],
-            amount: 450 + (Math.random() * 1200),
-            tip: 50 + (Math.random() * 200),
+            amount: 500 + (Math.random() * 1500),
+            tip: 50 + (Math.random() * 300),
             staffId: state.data.staff[Math.floor(Math.random() * state.data.staff.length)].id,
             branchId: state.branches[Math.floor(Math.random() * state.branches.length)].id,
             method: ['Card', 'Cash', 'Wallet', 'Package'][Math.floor(Math.random() * 4)]
@@ -107,37 +116,37 @@ function generateMockData() {
     }
 
     state.data.inventory = [
-        { name: 'Redken Brews', value: 12500, branchId: 'b1' },
-        { name: 'Kérastase Gold', value: 45000, branchId: 'b2' }
+        { name: 'Professional Back-bar', value: 85000, branchId: 'b1' },
+        { name: 'Retail Assets', value: 120000, branchId: 'b1' },
+        { name: 'Cape Assets', value: 45000, branchId: 'b2' }
     ];
 
     state.data.reconLogs = state.branches.map(b => ({
         date: new Date().toISOString().split('T')[0],
         branchId: b.id,
-        systemTotal: 15400,
-        variance: Math.random() > 0.8 ? -150 : 0,
-        status: Math.random() > 0.8 ? 'Short' : 'Balanced'
+        systemTotal: 12000 + (Math.random() * 8000),
+        variance: Math.random() > 0.9 ? -250 : 0,
+        status: Math.random() > 0.9 ? 'Short' : 'Balanced'
     }));
 }
 
 function renderAll() {
-    // Global Filtering
     let txs = state.data.transactions;
     if (state.selectedBranchId !== 'all') {
         txs = txs.filter(t => t.branchId === state.selectedBranchId);
     }
 
-    // Performance Calculations
+    // Dynamic Aggregation
     const totalRev = txs.reduce((acc, t) => acc + t.amount, 0);
     const totalTips = txs.reduce((acc, t) => acc + t.tip, 0);
     const invValue = state.data.inventory
         .filter(i => state.selectedBranchId === 'all' || i.branchId === state.selectedBranchId)
         .reduce((acc, i) => acc + i.value, 0);
     
-    document.getElementById('stat-revenue').textContent = `R${totalRev.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-tips').textContent = `R${totalTips.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-inventory').textContent = `R${invValue.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
-    document.getElementById('stat-avg').textContent = `R${(totalRev / (state.range || 1)).toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+    updateCounter('stat-revenue', totalRev);
+    updateCounter('stat-tips', totalTips);
+    updateCounter('stat-inventory', invValue);
+    updateCounter('stat-avg', (totalRev / (state.range || 1)));
 
     updateChart(txs);
     renderJournal(txs);
@@ -145,8 +154,17 @@ function renderAll() {
     renderRecon();
 }
 
+function updateCounter(id, val) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = `R${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+}
+
 function updateChart(txs) {
-    const ctx = document.getElementById('revenue-chart').getContext('2d');
+    const ctx = document.getElementById('revenue-chart');
+    if (!ctx) return;
+    
     const dayMap = {};
     txs.forEach(t => {
         dayMap[t.date] = (dayMap[t.date] || 0) + t.amount;
@@ -157,7 +175,7 @@ function updateChart(txs) {
 
     if (revenueChart) revenueChart.destroy();
     
-    revenueChart = new Chart(ctx, {
+    revenueChart = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
             labels,
@@ -165,12 +183,13 @@ function updateChart(txs) {
                 label: 'Gross Daily Revenue',
                 data: values,
                 borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                backgroundColor: 'rgba(16, 185, 129, 0.05)',
                 fill: true,
-                tension: 0.4,
-                borderWidth: 3,
-                pointRadius: 4,
-                pointBackgroundColor: '#10b981'
+                tension: 0.3,
+                borderWidth: 4,
+                pointRadius: 6,
+                pointBackgroundColor: '#10b981',
+                pointHoverRadius: 8
             }]
         },
         options: {
@@ -178,8 +197,8 @@ function updateChart(txs) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } } },
-                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } } }
+                y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 } } }
             }
         }
     });
@@ -187,18 +206,19 @@ function updateChart(txs) {
 
 function renderJournal(txs) {
     const tbody = document.getElementById('journal-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     
-    txs.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 50).forEach(t => {
+    txs.sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 100).forEach(t => {
         const staff = state.data.staff.find(s => s.id === t.staffId);
         const tr = document.createElement('tr');
         tr.className = 'table-row';
         tr.innerHTML = `
-            <td class="py-5 opacity-40">${t.date}</td>
-            <td class="py-5 font-black uppercase tracking-tighter">${t.id}</td>
+            <td class="py-5 opacity-40 text-[11px]">${t.date}</td>
+            <td class="py-5 font-black uppercase tracking-tighter text-emerald-500">${t.id}</td>
             <td class="py-5 font-bold">${staff ? staff.name : 'Unknown'}</td>
-            <td class="py-5"><span class="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase font-black">${t.method}</span></td>
-            <td class="py-5 text-right font-black">R${t.amount.toFixed(2)}</td>
+            <td class="py-5"><span class="px-3 py-1 bg-white/5 border border-white/10 rounded-lg text-[10px] uppercase font-black">${t.method}</span></td>
+            <td class="py-5 text-right font-black text-white">R${t.amount.toFixed(2)}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -206,6 +226,7 @@ function renderJournal(txs) {
 
 function renderTeam(txs) {
     const grid = document.getElementById('team-stats-grid');
+    if (!grid) return;
     grid.innerHTML = '';
 
     const staffStats = {};
@@ -219,7 +240,7 @@ function renderTeam(txs) {
     const card = document.createElement('div');
     card.className = 'dashboard-card';
     let html = `
-        <h3 class="text-xl font-black uppercase mb-8">Staff Performance Analytics</h3>
+        <h3 class="text-xl font-black uppercase mb-8">Staff Performance Matrix</h3>
         <table class="w-full text-left">
             <thead class="border-b border-white/5 text-[10px] font-black uppercase text-white/30 tracking-widest">
                 <tr>
@@ -237,11 +258,11 @@ function renderTeam(txs) {
         const s = staffStats[sid];
         html += `
             <tr class="table-row">
-                <td class="py-4 font-bold">${staff ? staff.name : sid}</td>
-                <td class="py-4 text-center opacity-40">${s.visits}</td>
-                <td class="py-4 text-center opacity-40">R${(s.sales/s.visits).toFixed(0)}</td>
-                <td class="py-4 text-center text-emerald-500 font-black">R${s.tips.toFixed(2)}</td>
-                <td class="py-4 text-right font-black">R${s.sales.toFixed(2)}</td>
+                <td class="py-4 font-bold text-white">${staff ? staff.name : sid}</td>
+                <td class="py-4 text-center opacity-40 font-black">${s.visits}</td>
+                <td class="py-4 text-center opacity-40 font-black">R${(s.sales/s.visits).toFixed(0)}</td>
+                <td class="py-4 text-center text-emerald-400 font-black">R${s.tips.toFixed(2)}</td>
+                <td class="py-4 text-right font-black text-white">R${s.sales.toFixed(2)}</td>
             </tr>`;
     });
 
@@ -252,6 +273,7 @@ function renderTeam(txs) {
 
 function renderRecon() {
     const tbody = document.getElementById('recon-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     state.data.reconLogs.forEach(log => {
@@ -261,11 +283,11 @@ function renderRecon() {
         const tr = document.createElement('tr');
         tr.className = 'table-row';
         tr.innerHTML = `
-            <td class="py-5 opacity-40">${log.date}</td>
-            <td class="py-5 font-bold">${branch ? branch.name : log.branchId}</td>
-            <td class="py-5 font-black">R${log.systemTotal.toFixed(2)}</td>
-            <td class="py-5 font-black ${log.variance < 0 ? 'text-red-400' : ''}">R${log.variance.toFixed(2)}</td>
-            <td class="py-5 text-right"><span class="px-3 py-1 ${log.status === 'Balanced' ? 'bg-emerald-500 text-black' : 'bg-red-500/20 text-red-400'} rounded-lg text-[10px] uppercase font-black">${log.status}</span></td>
+            <td class="py-5 opacity-40 text-[11px]">${log.date}</td>
+            <td class="py-5 font-bold text-white/80">${branch ? branch.name : log.branchId}</td>
+            <td class="py-5 font-black text-white">R${log.systemTotal.toFixed(2)}</td>
+            <td class="py-5 font-black ${log.variance < 0 ? 'text-red-400' : 'text-emerald-500'}">R${log.variance.toFixed(2)}</td>
+            <td class="py-5 text-right"><span class="px-4 py-1.5 ${log.status === 'Balanced' ? 'bg-emerald-500 text-black' : 'bg-red-500 text-white'} rounded-full text-[9px] uppercase font-black tracking-widest">${log.status}</span></td>
         `;
         tbody.appendChild(tr);
     });
@@ -276,23 +298,28 @@ function initUIEvents() {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.onclick = () => {
             const tab = btn.dataset.tab;
-            if (tab === 'settings') return; // Not implemented
+            if (tab === 'settings') return;
 
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            const targetTab = document.getElementById(`tab-${tab}`);
+            if (targetTab) targetTab.classList.remove('hidden');
             
-            document.getElementById('current-tab-title').textContent = btn.textContent;
+            const titleEl = document.getElementById('current-tab-title');
+            if (titleEl) titleEl.textContent = btn.innerText;
         };
     });
 
     // Branch Selector
-    document.getElementById('branch-selector').onchange = (e) => {
-        state.selectedBranchId = e.target.value;
-        refreshData();
-    };
+    const bSel = document.getElementById('branch-selector');
+    if (bSel) {
+        bSel.onchange = (e) => {
+            state.selectedBranchId = e.target.value;
+            refreshData();
+        };
+    }
 
     // Range Filter
     document.querySelectorAll('.filter-pill').forEach(pill => {
@@ -304,9 +331,9 @@ function initUIEvents() {
             const customBox = document.getElementById('custom-date-container');
             
             if (range === 'custom') {
-                customBox.classList.remove('hidden');
+                if (customBox) customBox.classList.remove('hidden');
             } else {
-                customBox.classList.add('hidden');
+                if (customBox) customBox.classList.add('hidden');
                 state.range = parseInt(range);
                 setRange(state.range);
                 refreshData();
@@ -314,23 +341,28 @@ function initUIEvents() {
         };
     });
 
-    document.getElementById('start-date').onchange = () => {
-        state.startDate = document.getElementById('start-date').value;
+    const sIn = document.getElementById('start-date');
+    const eIn = document.getElementById('end-date');
+    if (sIn) sIn.onchange = () => {
+        state.startDate = sIn.value;
         state.range = Math.ceil((new Date(state.endDate) - new Date(state.startDate)) / (1000 * 60 * 60 * 24));
         refreshData();
     };
-    
-    document.getElementById('end-date').onchange = () => {
-        state.endDate = document.getElementById('end-date').value;
+    if (eIn) eIn.onchange = () => {
+        state.endDate = eIn.value;
         state.range = Math.ceil((new Date(state.endDate) - new Date(state.startDate)) / (1000 * 60 * 60 * 24));
         refreshData();
     };
 
     // Logout
-    document.getElementById('logout-btn').onclick = async () => {
-        await supabase.auth.signOut();
-        window.location.href = "index.html";
-    };
+    const lBtn = document.getElementById('logout-btn');
+    if (lBtn) {
+        lBtn.onclick = async () => {
+            await supabase.auth.signOut();
+            window.location.replace("index.html");
+        };
+    }
 }
 
-document.addEventListener('DOMContentLoaded', initDashboard);
+// Ensure execution
+initDashboard();

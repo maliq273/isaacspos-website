@@ -28,27 +28,25 @@
 
             <form id="login-form" class="space-y-6">
                 <div class="space-y-2">
-                    <label class="text-[9px] font-black uppercase tracking-[0.4em] text-white/30 ml-2">Access Email</label>
+                    <label class="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 ml-2">Access Email</label>
                     <div class="relative">
-                        <!-- Darker icon for white background -->
-                        <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/60 z-10 pointer-events-none"></i>
-                        <input type="email" id="email" required placeholder="admin@salon.co.za" class="auth-input pl-14">
+                        <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black z-20 pointer-events-none"></i>
+                        <input type="email" id="email" required placeholder="admin@salon.co.za" class="auth-input pl-16">
                     </div>
                 </div>
                 <div class="space-y-2">
-                    <label class="text-[9px] font-black uppercase tracking-[0.4em] text-white/30 ml-2">Secure Cipher</label>
+                    <label class="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 ml-2">Secure Cipher</label>
                     <div class="relative">
-                        <!-- Darker icon for white background -->
-                        <i data-lucide="lock" class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-black/60 z-10 pointer-events-none"></i>
-                        <input type="password" id="password" required placeholder="••••••••" class="auth-input px-14">
-                        <button type="button" id="toggle-password" class="absolute right-6 top-1/2 -translate-y-1/2 text-black/60 hover:text-black transition-colors z-20">
-                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        <i data-lucide="lock" class="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black z-20 pointer-events-none"></i>
+                        <input type="password" id="password" required placeholder="••••••••" class="auth-input px-16">
+                        <button type="button" id="toggle-password" class="absolute right-6 top-1/2 -translate-y-1/2 text-black hover:text-emerald-700 transition-colors z-30">
+                            <i data-lucide="eye" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" id="submit-btn" class="w-full py-6 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs tracking-[0.4em] rounded-2xl transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98]">
-                    Initiate Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                <button type="submit" id="submit-btn" class="w-full py-6 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-sm tracking-[0.3em] rounded-2xl transition-all shadow-2xl flex items-center justify-center gap-3 active:scale-[0.98]">
+                    Initiate Uplink <i data-lucide="arrow-right" class="w-5 h-5"></i>
                 </button>
             </form>
 
@@ -61,6 +59,7 @@
     </div>
 
     <script>
+        // Use consistent client across files
         const supabase = window.supabase.createClient(
           "https://pespysgaqfstachvnsvr.supabase.co", 
           "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
@@ -68,13 +67,12 @@
 
         lucide.createIcons();
 
-        // Password Toggle Logic
         const passInput = document.getElementById('password');
         const toggleBtn = document.getElementById('toggle-password');
         toggleBtn.onclick = () => {
             const isPass = passInput.type === 'password';
             passInput.type = isPass ? 'text' : 'password';
-            toggleBtn.innerHTML = isPass ? '<i data-lucide="eye-off" class="w-4 h-4"></i>' : '<i data-lucide="eye" class="w-4 h-4"></i>';
+            toggleBtn.innerHTML = isPass ? '<i data-lucide="eye-off" class="w-5 h-5"></i>' : '<i data-lucide="eye" class="w-5 h-5"></i>';
             lucide.createIcons();
         };
 
@@ -87,22 +85,26 @@
             const errorMessage = document.getElementById('error-message');
 
             submitBtn.disabled = true;
-            submitBtn.textContent = "Negotiating Protocol...";
+            submitBtn.textContent = "Negotiating Uplink...";
             errorDiv.classList.add('hidden');
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
 
-            if (error) {
+                if (error) throw error;
+                
+                // Successful login
+                console.log("Session established. Redirecting to Matrix...");
+                window.location.replace("dashboard.html");
+            } catch (error) {
                 errorMessage.textContent = error.message;
                 errorDiv.classList.remove('hidden');
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Initiate Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+                submitBtn.innerHTML = 'Initiate Uplink <i data-lucide="arrow-right" class="w-5 h-5"></i>';
                 lucide.createIcons();
-            } else {
-                window.location.href = "dashboard.html";
             }
         };
     </script>

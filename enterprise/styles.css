@@ -1,6 +1,7 @@
 :root {
     --emerald: #10b981;
     --dark: #050505;
+    --card-bg: #080808;
 }
 
 .industrial-grid {
@@ -16,7 +17,7 @@
 }
 
 .auth-card {
-    background: #080808;
+    background: var(--card-bg);
     border: 1px solid rgba(16, 185, 129, 0.2);
     border-radius: 4rem;
     padding: 60px;
@@ -25,20 +26,40 @@
 
 .auth-input {
     width: 100%;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb;
     border-radius: 20px;
     padding: 22px 28px;
-    color: white;
+    color: #000000 !important;
+    caret-color: #000000;
     outline: none;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s ease;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-input::placeholder {
+    color: #9ca3af;
+    font-weight: 500;
 }
 
 .auth-input:focus {
     border-color: var(--emerald);
-    background: rgba(16, 185, 129, 0.05);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+/* Dashboard Specifics */
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 2.5rem;
+    padding: 35px;
+    transition: all 0.4s ease;
+}
+
+.dashboard-card:hover {
+    border-color: var(--emerald);
+    background: rgba(16, 185, 129, 0.04);
 }
 
 .nav-btn {
@@ -54,16 +75,7 @@
     letter-spacing: 0.1em;
     color: rgba(255, 255, 255, 0.3);
     transition: all 0.3s ease;
-}
-
-.nav-btn i {
-    width: 18px;
-    height: 18px;
-}
-
-.nav-btn:hover {
-    background: rgba(255, 255, 255, 0.03);
-    color: white;
+    cursor: pointer;
 }
 
 .nav-btn.active {
@@ -72,24 +84,43 @@
     box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
 }
 
-.stat-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 2.5rem;
-    padding: 40px;
-    transition: all 0.5s ease;
+.table-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.2s;
 }
 
-.stat-card:hover {
+.table-row:hover {
+    background: rgba(255, 255, 255, 0.01);
+}
+
+.filter-pill {
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.filter-pill.active {
     border-color: var(--emerald);
+    color: var(--emerald);
     background: rgba(16, 185, 129, 0.05);
 }
 
 .reveal {
-    animation: revealAnim 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: revealAnim 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes revealAnim {
-    from { opacity: 0; transform: translateY(30px); }
+    from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
 }

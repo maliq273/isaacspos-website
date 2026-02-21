@@ -11,6 +11,30 @@ const supabase = window.supabase.createClient(
     }
 );
 
+// Protect dashboard
+async function checkAuth() {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+        window.location.href = "index.html";
+    }
+}
+
+checkAuth();
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await supabase.auth.signOut();
+    window.location.href = "index.html";
+});
+
+// Extra safety: auth listener
+supabase.auth.onAuthStateChange((event, session) => {
+    if (!session) {
+        window.location.href = "index.html";
+    }
+});
+
+
 // State Management
 let state = {
     user: null,

@@ -66,7 +66,6 @@
 
         lucide.createIcons();
 
-        // Password Toggle
         const passInput = document.getElementById('password');
         const toggleBtn = document.getElementById('toggle-password');
         toggleBtn.onclick = () => {
@@ -76,24 +75,27 @@
             lucide.createIcons();
         };
 
-        // Auth Logic with Listener
+        // Hardened Auth Listener
         supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                console.log("Persistence confirmed. Redirecting...");
-                window.location.href = "dashboard.html";
+            if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+                console.log("Uplink Confirmed. Diverting to Dashboard...");
+                // Use location.replace to prevent back-button loops
+                window.location.replace("dashboard.html");
             }
         });
 
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const submitBtn = document.getElementById('submit-btn');
             const errorDiv = document.getElementById('auth-error');
             const errorMessage = document.getElementById('error-message');
 
+            if (!email || !password) return;
+
             submitBtn.disabled = true;
-            submitBtn.textContent = "SYNCHRONIZING...";
+            submitBtn.innerHTML = "Authenticating Protocol...";
             errorDiv.classList.add('hidden');
 
             const { error } = await supabase.auth.signInWithPassword({ email, password });

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Enterprise Login — IsaacsPOS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,7 +12,7 @@
 </head>
 <body class="bg-black text-white selection:bg-emerald-500 selection:text-black">
     <div class="min-h-screen flex items-center justify-center p-6 industrial-grid">
-        <div class="auth-card w-full max-w-md reveal">
+        <div class="auth-card w-full max-w-md">
             <div class="mb-12 text-center">
                 <div class="w-20 h-20 bg-emerald-600 rounded-3xl flex items-center justify-center shadow-2xl mx-auto mb-8">
                     <span class="text-4xl font-black italic text-white">I</span>
@@ -30,17 +30,17 @@
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 ml-2">Access Email</label>
                     <div class="relative">
-                        <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black z-20 pointer-events-none"></i>
-                        <input type="email" id="email" required placeholder="admin@salon.co.za" class="auth-input pl-16">
+                        <i data-lucide="mail" class="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-black/40 z-20 pointer-events-none"></i>
+                        <input type="email" id="email" required placeholder="admin@salon.co.za" class="auth-input pl-16" autocomplete="email">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 ml-2">Secure Cipher</label>
                     <div class="relative">
-                        <i data-lucide="lock" class="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-black z-20 pointer-events-none"></i>
-                        <input type="password" id="password" required placeholder="••••••••" class="auth-input px-16">
-                        <button type="button" id="toggle-password" class="absolute right-6 top-1/2 -translate-y-1/2 text-black hover:text-emerald-700 transition-colors z-30">
-                            <i data-lucide="eye" class="w-5 h-5"></i>
+                        <i data-lucide="lock" class="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-black/40 z-20 pointer-events-none"></i>
+                        <input type="password" id="password" required placeholder="••••••••" class="auth-input px-16" autocomplete="current-password">
+                        <button type="button" id="toggle-password" class="absolute right-6 top-1/2 -translate-y-1/2 text-black/40 hover:text-emerald-600 transition-colors z-30">
+                            <i data-lucide="eye" class="w-6 h-6"></i>
                         </button>
                     </div>
                 </div>
@@ -59,7 +59,6 @@
     </div>
 
     <script>
-        // Use consistent client across files
         const supabase = window.supabase.createClient(
           "https://pespysgaqfstachvnsvr.supabase.co", 
           "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
@@ -67,14 +66,23 @@
 
         lucide.createIcons();
 
+        // Password Toggle
         const passInput = document.getElementById('password');
         const toggleBtn = document.getElementById('toggle-password');
         toggleBtn.onclick = () => {
             const isPass = passInput.type === 'password';
             passInput.type = isPass ? 'text' : 'password';
-            toggleBtn.innerHTML = isPass ? '<i data-lucide="eye-off" class="w-5 h-5"></i>' : '<i data-lucide="eye" class="w-5 h-5"></i>';
+            toggleBtn.innerHTML = isPass ? '<i data-lucide="eye-off" class="w-6 h-6"></i>' : '<i data-lucide="eye" class="w-6 h-6"></i>';
             lucide.createIcons();
         };
+
+        // Auth Logic with Listener
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                console.log("Persistence confirmed. Redirecting...");
+                window.location.href = "dashboard.html";
+            }
+        });
 
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
@@ -85,21 +93,12 @@
             const errorMessage = document.getElementById('error-message');
 
             submitBtn.disabled = true;
-            submitBtn.textContent = "Negotiating Uplink...";
+            submitBtn.textContent = "SYNCHRONIZING...";
             errorDiv.classList.add('hidden');
 
-            try {
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password
-                });
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-                if (error) throw error;
-                
-                // Successful login
-                console.log("Session established. Redirecting to Matrix...");
-                window.location.replace("dashboard.html");
-            } catch (error) {
+            if (error) {
                 errorMessage.textContent = error.message;
                 errorDiv.classList.remove('hidden');
                 submitBtn.disabled = false;

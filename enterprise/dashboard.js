@@ -324,25 +324,37 @@ function initUIEvents() {
     if (lBtn) {
         lBtn.onclick = async () => {
             await supabase.auth.signOut();
-            window.location.href = "index.html";
+            window.location.replace("index.html");
         };
     }
 }
-async function initDashboard() {
-    const { data: { session } } = await supabase.auth.getSession();
 
-    if (!session) {
-        window.location.href = "index.html";
+// Master Initialization Node
+async function initDashboard() {
+    console.log("Initializing Master Dashboard Node...");
+    
+    // FAIL-SAFE RETRY LOOP FOR SESSION HYDRATION
+    let sessionResult = await supabase.auth.getSession();
+    
+    if (!sessionResult.data.session) {
+        console.warn("Session not found immediately. Retrying handshake in 600ms...");
+        await new Promise(r => setTimeout(r, 600));
+        sessionResult = await supabase.auth.getSession();
+    }
+
+    if (!sessionResult.data.session) {
+        console.error("Authorization Failed. Reverting to Login Terminal.");
+        window.location.replace("index.html");
         return;
     }
 
-    state.user = session.user;
+    state.user = sessionResult.data.session.user;
+    console.log("Access Granted. Uplink Active for:", state.user.email);
 
     // UI Greeting
     const welcomeEl = document.getElementById('current-tab-title');
     if (welcomeEl && state.user?.email) {
-        welcomeEl.textContent =
-            `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
+        welcomeEl.textContent = `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
     }
 
     await fetchBranches();
@@ -353,18 +365,5 @@ async function initDashboard() {
     if (window.lucide) lucide.createIcons();
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-        window.location.href = "index.html";
-
-        return;
-    }
-
-    state.user = session.user;
-    await initDashboard();
-});
-
-
+// Global Entry Point
+document.addEventListener("DOMContentLoaded", initDashboard);

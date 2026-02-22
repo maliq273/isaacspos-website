@@ -48,8 +48,8 @@
                 </button>
             </div>
 
-            <button type="submit"
-                    class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-black font-bold uppercase rounded-xl">
+            <button type="submit" id="submit-btn"
+                    class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-black font-bold uppercase rounded-xl transition-all active:scale-95">
                 Login
             </button>
 
@@ -72,14 +72,13 @@ const supabase = window.supabase.createClient(
 
 lucide.createIcons();
 
-// Redirect if already logged in
-(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-        window.location.href = "dashboard.html";
-
+// Listen for Auth events - this is more robust than manual redirects
+supabase.auth.onAuthStateChange((event, session) => {
+    if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
+        console.log("Authentication confirmed. Redirecting to Matrix...");
+        window.location.replace("dashboard.html");
     }
-})();
+});
 
 // Password toggle
 document.getElementById("toggle-password").onclick = () => {
@@ -94,19 +93,23 @@ document.getElementById("login-form").onsubmit = async (e) => {
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
     const errorBox = document.getElementById("auth-error");
+    const submitBtn = document.getElementById("submit-btn");
 
     errorBox.classList.add("hidden");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "SYNCHRONIZING...";
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
         errorBox.textContent = error.message;
         errorBox.classList.remove("hidden");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Login";
         return;
     }
-
-    window.location.href = "dashboard.html";
-
+    
+    // onAuthStateChange handles the redirect
 };
 </script>
 

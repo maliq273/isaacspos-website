@@ -11,29 +11,25 @@ const supabase = window.supabase.createClient(
     }
 );
 
-// Protect dashboard
-async function checkAuth() {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-        window.location.href = "index.html";
+// Wait for session to restore properly
+supabase.auth.onAuthStateChange(async (event, session) => {
+
+    if (event === "INITIAL_SESSION") {
+
+        if (!session) {
+            window.location.replace("index.html");
+            return;
+        }
+
+        // Start dashboard ONLY after session confirmed
+        state.user = session.user;
+        await initDashboard();
     }
-}
 
-checkAuth();
-
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-    await supabase.auth.signOut();
-    window.location.href = "index.html";
-});
-
-// Extra safety: auth listener
-supabase.auth.onAuthStateChange((event, session) => {
-    if (!session) {
-        window.location.href = "index.html";
+    if (event === "SIGNED_OUT") {
+        window.location.replace("index.html");
     }
 });
-
 
 // State Management
 let state = {
@@ -71,9 +67,6 @@ async function initDashboard() {
     if (window.lucide) lucide.createIcons();
 }
 
-    state.user = sessionResult.data.session.user;
-    console.log("Access Granted: " + state.user.email);
-    
     // UI Greetings
     const welcomeEl = document.getElementById('current-tab-title');
     if (welcomeEl) welcomeEl.textContent = `Node: ${state.user.email.split('@')[0].toUpperCase()}`;

@@ -1,14 +1,7 @@
 // IsaacsPOS Enterprise Dashboard Logic
 const supabase = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co",
-    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d",
-    {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-        }
-    }
+    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
 );
 
 // State Management
@@ -329,27 +322,63 @@ function initUIEvents() {
     }
 }
 
+/**
+ * Robust Session Verification Protocol
+ * This prevents the redirection loop by explicitly waiting for the Supabase
+ * SDK to finalize its asynchronous session hydration from local storage.
+ */
+async function waitForSession() {
+    return new Promise((resolve) => {
+        // First, try immediate check
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                resolve(session);
+                return;
+            }
+            
+            // If not found, use a listener to catch the initialization event
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                if (session) {
+                    subscription.unsubscribe();
+                    resolve(session);
+                } else if (event === 'INITIAL_SESSION') {
+                    // SDK has finished loading and no session was found
+                    subscription.unsubscribe();
+                    resolve(null);
+                }
+            });
+
+            // Fail-safe: If after 3 seconds we still have nothing, resolve as null
+            setTimeout(() => {
+                subscription.unsubscribe();
+                resolve(null);
+            }, 3000);
+        });
+    });
+}
+
 // Master Initialization Node
 async function initDashboard() {
-    console.log("Initializing Master Dashboard Node...");
-    
-    // FAIL-SAFE RETRY LOOP FOR SESSION HYDRATION
-    let sessionResult = await supabase.auth.getSession();
-    
-    if (!sessionResult.data.session) {
-        console.warn("Session not found immediately. Retrying handshake in 600ms...");
-        await new Promise(r => setTimeout(r, 600));
-        sessionResult = await supabase.auth.getSession();
-    }
+    console.log("Initiating Matrix Auth Handshake...");
+    const loadingOverlay = document.getElementById('entry-loading');
 
-    if (!sessionResult.data.session) {
-        console.error("Authorization Failed. Reverting to Login Terminal.");
+    // Wait for Supabase to confirm state
+    const session = await waitForSession();
+
+    if (!session) {
+        console.error("Authorization Token Invalid. Reverting to Gateway...");
         window.location.replace("index.html");
         return;
     }
 
-    state.user = sessionResult.data.session.user;
-    console.log("Access Granted. Uplink Active for:", state.user.email);
+    state.user = session.user;
+    console.log("Uplink Confirmed for node:", state.user.email);
+
+    // Fade out loading overlay
+    if (loadingOverlay) {
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => loadingOverlay.style.display = 'none', 500);
+    }
 
     // UI Greeting
     const welcomeEl = document.getElementById('current-tab-title');

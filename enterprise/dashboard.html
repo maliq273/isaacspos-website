@@ -12,6 +12,13 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-[#050505] text-white selection:bg-emerald-500 selection:text-black">
+    
+    <!-- Entry Loading Overlay -->
+    <div id="entry-loading" class="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center">
+        <div class="w-16 h-16 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-6"></div>
+        <div class="text-[9px] font-black uppercase tracking-[0.6em] text-emerald-500 animate-pulse">Establishing Secure Handshake</div>
+    </div>
+
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <aside class="w-80 glass border-r border-white/5 flex flex-col p-8 hidden lg:flex">

@@ -11,19 +11,6 @@ const supabase = window.supabase.createClient(
     }
 );
 
-// Wait for session to restore properly
-supabase.auth.onAuthStateChange(async (_event, session) => {
-
-    if (!session) {
-        window.location.replace("index.html");
-        return;
-    }
-
-    state.user = session.user;
-    await initDashboard();
-});
-
-
 // State Management
 let state = {
     user: null,
@@ -365,4 +352,18 @@ async function initDashboard() {
 
     if (window.lucide) lucide.createIcons();
 }
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+        window.location.replace("index.html");
+        return;
+    }
+
+    state.user = session.user;
+    await initDashboard();
+});
+
 

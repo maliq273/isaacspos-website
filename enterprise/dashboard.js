@@ -49,38 +49,6 @@ let state = {
 
 let revenueChart = null;
 
-async function initDashboard() {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session) {
-        window.location.replace("index.html");
-        return;
-    }
-
-    state.user = session.user;
-
-    await fetchBranches();
-    setRange(7);
-    await refreshData();
-    initUIEvents();
-
-    if (window.lucide) lucide.createIcons();
-}
-
-    // UI Greetings
-    const welcomeEl = document.getElementById('current-tab-title');
-    if (welcomeEl) welcomeEl.textContent = `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
-
-    // Load Infrastructure
-    await fetchBranches();
-    setRange(7);
-    await refreshData();
-    
-    // Initialize UI
-    initUIEvents();
-    if (window.lucide) lucide.createIcons();
-}
-
 async function fetchBranches() {
     state.branches = [
         { id: 'b1', name: 'Sandton Master Node' },
@@ -380,5 +348,28 @@ function initUIEvents() {
         };
     }
 }
+async function initDashboard() {
+    const { data: { session } } = await supabase.auth.getSession();
 
-initDashboard();
+    if (!session) {
+        window.location.replace("index.html");
+        return;
+    }
+
+    state.user = session.user;
+
+    // UI Greeting
+    const welcomeEl = document.getElementById('current-tab-title');
+    if (welcomeEl && state.user?.email) {
+        welcomeEl.textContent =
+            `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
+    }
+
+    await fetchBranches();
+    setRange(7);
+    await refreshData();
+    initUIEvents();
+
+    if (window.lucide) lucide.createIcons();
+}
+

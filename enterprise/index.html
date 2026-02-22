@@ -76,7 +76,8 @@ lucide.createIcons();
 (async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-        window.location.replace("dashboard.html");
+        window.location.href = "dashboard.html";
+
     }
 })();
 
@@ -104,7 +105,8 @@ document.getElementById("login-form").onsubmit = async (e) => {
         return;
     }
 
-    window.location.replace("dashboard.html");
+    window.location.href = "dashboard.html";
+
 };
 </script>
 

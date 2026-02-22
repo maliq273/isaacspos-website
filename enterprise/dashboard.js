@@ -12,24 +12,17 @@ const supabase = window.supabase.createClient(
 );
 
 // Wait for session to restore properly
-supabase.auth.onAuthStateChange(async (event, session) => {
+supabase.auth.onAuthStateChange(async (_event, session) => {
 
-    if (event === "INITIAL_SESSION") {
-
-        if (!session) {
-            window.location.replace("index.html");
-            return;
-        }
-
-        // Start dashboard ONLY after session confirmed
-        state.user = session.user;
-        await initDashboard();
-    }
-
-    if (event === "SIGNED_OUT") {
+    if (!session) {
         window.location.replace("index.html");
+        return;
     }
+
+    state.user = session.user;
+    await initDashboard();
 });
+
 
 // State Management
 let state = {

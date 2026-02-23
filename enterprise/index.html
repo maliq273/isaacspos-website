@@ -10,7 +10,41 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root { --emerald: #10b981; --dark: #000000; --card-bg: #0a0a0a; }
+        body { background-color: var(--dark); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        .industrial-grid {
+            background-color: var(--dark);
+            background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0);
+            background-size: 50px 50px;
+        }
+        .auth-card {
+            background: var(--card-bg);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            border-radius: 3rem;
+            padding: 50px;
+            box-shadow: 0 40px 100px rgba(0,0,0,1);
+            position: relative;
+            z-index: 10;
+        }
+        .auth-input {
+            width: 100%;
+            background-color: #FFFFFF !important;
+            color: #000000 !important;
+            border: 3px solid #E5E7EB;
+            border-radius: 18px;
+            padding: 24px 28px;
+            outline: none;
+            font-weight: 800;
+            font-size: 18px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .auth-input:focus {
+            border-color: var(--emerald) !important;
+            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.15) !important;
+            transform: scale(1.01);
+        }
+    </style>
 </head>
 
 <body class="bg-black text-white selection:bg-emerald-500 selection:text-black">
@@ -42,33 +76,22 @@
         </div>
 
         <form id="login-form" class="space-y-8">
-
             <div class="space-y-3">
                 <label class="text-[9px] font-black uppercase tracking-[0.5em] text-white/30 ml-2 block">Identity Registry</label>
-                <input type="email" id="email" required
-                       placeholder="admin@salon.co.za"
-                       class="auth-input w-full"
-                       autocomplete="email">
+                <input type="email" id="email" required placeholder="admin@salon.co.za" class="auth-input w-full" autocomplete="email">
             </div>
 
             <div class="relative space-y-3">
                 <label class="text-[9px] font-black uppercase tracking-[0.5em] text-white/30 ml-2 block">Secure Cipher</label>
-                <input type="password" id="password" required
-                       placeholder="••••••••"
-                       class="auth-input w-full pr-14"
-                       autocomplete="current-password">
-
-                <button type="button" id="toggle-password"
-                        class="absolute right-5 top-[46px] text-gray-400 hover:text-emerald-500 transition-colors">
+                <input type="password" id="password" required placeholder="••••••••" class="auth-input w-full pr-14" autocomplete="current-password">
+                <button type="button" id="toggle-password" class="absolute right-5 top-[46px] text-gray-400 hover:text-emerald-500 transition-colors">
                     <i data-lucide="eye" class="w-5 h-5"></i>
                 </button>
             </div>
 
-            <button type="submit" id="submit-btn"
-                    class="w-full py-7 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs tracking-[0.4em] rounded-[1.5rem] transition-all shadow-[0_20px_50px_rgba(16,185,129,0.2)] active:scale-95 flex items-center justify-center gap-4">
+            <button type="submit" id="submit-btn" class="w-full py-7 bg-emerald-600 hover:bg-emerald-500 text-black font-black uppercase text-xs tracking-[0.4em] rounded-[1.5rem] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4">
                 Initiate Access <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </button>
-
         </form>
 
         <div class="mt-16 pt-10 border-t border-white/5 text-center">
@@ -80,7 +103,7 @@
 </div>
 
 <script>
-// Updated with correct Anon Public Key provided
+// SINGLE DECLARATION OF SUPABASE
 const supabase = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlc3B5c2dhcWZzdGFjaHZuc3ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzg0NTIsImV4cCI6MjA4NjgxNDQ1Mn0.uCg80UmYLtcUvpjIV_G7bRwQqJV1f-INKOWzfcendes"
@@ -108,45 +131,35 @@ document.getElementById('login-form').onsubmit = async (e) => {
     const submitBtn = document.getElementById('submit-btn');
     const syncOverlay = document.getElementById('sync-overlay');
 
-    if (!email || !password) return;
-
     errorBox.classList.add('hidden');
-    syncOverlay.classList.remove('hidden');
+    syncOverlay.classList.remove('hidden'); // THE HANDSHAKE IS THE ONLY THING USER SEES NOW
     submitBtn.disabled = true;
 
-    console.log("Gatekeeper: Initiating Indefinite Wait for Supabase Response...");
-    
     try {
+        // WE WAIT INDEFINITELY HERE. 1 MINUTE OR 10 MINUTES, IT STAYS UNTIL RESPONSE.
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
-            console.error("Handshake Refused:", error.message);
+            // THUMBS DOWN
             syncOverlay.classList.add('hidden');
-            errorMessage.textContent = `Protocol Error: ${error.message}`;
+            errorMessage.textContent = "Access Denied: Incorrect Identity or Cipher";
             errorBox.classList.remove('hidden');
             submitBtn.disabled = false;
             return;
         }
 
         if (data.session) {
-            console.log("Handshake Verified. Permission Granted. Transitioning...");
-            // Extra delay not used, but replace ensures we move clean
+            // THUMBS UP
+            console.log("Security Protocol Satisfied. Diverting to Dashboard...");
             window.location.replace("dashboard.html");
-        } else {
-            // Thumbs down
-            syncOverlay.classList.add('hidden');
-            errorMessage.textContent = "Access Denied: Invalid Credentials";
-            errorBox.classList.remove('hidden');
-            submitBtn.disabled = false;
         }
     } catch (err) {
         syncOverlay.classList.add('hidden');
-        errorMessage.textContent = "System Fault: Handshake Interrupted";
+        errorMessage.textContent = "System Fault: Handshake Interrupted. Contact Admin.";
         errorBox.classList.remove('hidden');
         submitBtn.disabled = false;
     }
 };
 </script>
-
 </body>
 </html>

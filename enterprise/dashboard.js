@@ -1,110 +1,118 @@
 
-// Initialize Supabase Client
-const supabase = window.supabase.createClient(
-    "https://pespysgaqfstachvnsvr.supabase.co", 
-    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
-);
-
-const state = {
-    currentView: 'overview',
-    isMobileNavOpen: false
-};
-
-async function initDashboard() {
-    // 1. Check for Active JWT Session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-    if (sessionError || !session) {
-        console.error("No valid JWT detected. Access denied.");
-        window.location.href = "index.html"; 
-        return;
-    }
-
-    // 2. Identify Current User
-    const user = session.user;
-    const emailDisplay = document.getElementById('user-email');
-    if (emailDisplay) emailDisplay.textContent = user.email;
-
-    // 3. Initialize UI Components
-    initNavigation();
-    initMobileNav();
-    
-    // Trigger Icon Generation
-    if (window.lucide) {
-        lucide.createIcons();
-    }
-
-    console.log("[IsaacsPOS] Cloud Uplink Stable. User:", user.email);
+:root {
+    --emerald: #10b981;
+    --dark: #050505;
 }
 
-function initNavigation() {
-    const navBtns = document.querySelectorAll('.nav-btn');
-    const viewSections = document.querySelectorAll('.view-section');
-    const viewTitle = document.getElementById('view-title');
-
-    navBtns.forEach(btn => {
-        btn.onclick = () => {
-            const viewId = btn.getAttribute('data-view');
-            if (!viewId) return;
-
-            // Update Active State on Buttons
-            navBtns.forEach(b => b.classList.remove('active'));
-            document.querySelectorAll(`[data-view="${viewId}"]`).forEach(b => b.classList.add('active'));
-
-            // Switch Sections
-            viewSections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === `view-${viewId}`) {
-                    section.classList.add('active');
-                }
-            });
-
-            // Update Header Title
-            const labels = {
-                overview: 'Registry Overview',
-                network: 'Salon Network',
-                stats: 'Global Stats',
-                settings: 'Cloud Settings'
-            };
-            viewTitle.textContent = labels[viewId] || 'Dashboard';
-
-            // Close mobile nav if open
-            closeMobileNav();
-        };
-    });
+.industrial-grid {
+    background-color: var(--dark);
+    background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0);
+    background-size: 50px 50px;
 }
 
-function initMobileNav() {
-    const openBtn = document.getElementById('open-mobile-btn');
-    const closeBtn = document.getElementById('close-mobile-btn');
-    const overlay = document.getElementById('nav-close-overlay');
-    const mobileNav = document.getElementById('mobile-nav');
-
-    if (openBtn) openBtn.onclick = () => {
-        mobileNav.classList.add('open');
-        document.body.style.overflow = 'hidden';
-    };
-
-    if (closeBtn) closeBtn.onclick = closeMobileNav;
-    if (overlay) overlay.onclick = closeMobileNav;
+.glass {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
 }
 
-function closeMobileNav() {
-    const mobileNav = document.getElementById('mobile-nav');
-    if (mobileNav) {
-        mobileNav.classList.remove('open');
-        document.body.style.overflow = 'auto';
-    }
+.auth-card {
+    background: #080808;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 4rem;
+    padding: 60px;
+    box-shadow: 0 50px 100px rgba(0,0,0,1);
 }
 
-// Global Terminal Shutdown
-const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-        const { error } = await supabase.auth.signOut();
-        if (!error) window.location.href = "index.html";
-    });
+.auth-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 22px 28px;
+    color: white;
+    outline: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease;
 }
 
-// Start Lifecycle
-document.addEventListener('DOMContentLoaded', initDashboard);
+.auth-input:focus {
+    border-color: var(--emerald);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+.nav-btn {
+    text-align: left;
+    padding: 18px 25px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.nav-btn i {
+    width: 18px;
+    height: 18px;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: white;
+}
+
+.nav-btn.active {
+    background: var(--emerald);
+    color: black;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3);
+    border-color: rgba(0,0,0,0.1);
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 2.5rem;
+    padding: 40px;
+    transition: all 0.5s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--emerald);
+    background: rgba(16, 185, 129, 0.05);
+    transform: translateY(-5px);
+}
+
+.btn-primary {
+    background: #fff;
+    color: #000;
+    border-radius: 1.5rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-primary:hover {
+    background: var(--emerald);
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.reveal {
+    animation: revealAnim 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes revealAnim {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}

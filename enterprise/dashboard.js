@@ -323,69 +323,63 @@ function initUIEvents() {
 }
 
 /**
- * Robust Session Verification Protocol
- * This prevents the redirection loop by explicitly waiting for the Supabase
- * SDK to finalize its asynchronous session hydration from local storage.
+ * Event-Based Session Handshake
+ * This function uses a listener to wait indefinitely until the Supabase SDK 
+ * confirms whether a session exists or not. No timeouts.
  */
-async function waitForSession() {
+async function getAuthenticatedSession() {
     return new Promise((resolve) => {
-        // First, try immediate check
+        // Initial quick check
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 resolve(session);
-                return;
+            } else {
+                // If not immediate, wait for the INITIAL_SESSION event
+                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                    if (event === 'INITIAL_SESSION') {
+                        subscription.unsubscribe();
+                        resolve(session);
+                    } else if (session) {
+                        // Catch signed-in event if it happens before initial_session fires
+                        subscription.unsubscribe();
+                        resolve(session);
+                    }
+                });
             }
-            
-            // If not found, use a listener to catch the initialization event
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                if (session) {
-                    subscription.unsubscribe();
-                    resolve(session);
-                } else if (event === 'INITIAL_SESSION') {
-                    // SDK has finished loading and no session was found
-                    subscription.unsubscribe();
-                    resolve(null);
-                }
-            });
-
-            // Fail-safe: If after 3 seconds we still have nothing, resolve as null
-            setTimeout(() => {
-                subscription.unsubscribe();
-                resolve(null);
-            }, 3000);
         });
     });
 }
 
-// Master Initialization Node
+// Master Dashboard Entry Node
 async function initDashboard() {
-    console.log("Initiating Matrix Auth Handshake...");
-    const loadingOverlay = document.getElementById('entry-loading');
+    console.log("Matrix Node: Verifying Uplink Integrity...");
+    const appShell = document.getElementById('main-app-shell');
 
-    // Wait for Supabase to confirm state
-    const session = await waitForSession();
+    // WAIT INDEFINITELY for confirmation
+    const session = await getAuthenticatedSession();
 
     if (!session) {
-        console.error("Authorization Token Invalid. Reverting to Gateway...");
+        console.error("Uplink Security Failure: Redirecting to Terminal.");
         window.location.replace("index.html");
         return;
     }
 
+    // Success State
     state.user = session.user;
-    console.log("Uplink Confirmed for node:", state.user.email);
+    console.log("Uplink Verified for node:", state.user.email);
 
-    // Fade out loading overlay
-    if (loadingOverlay) {
-        loadingOverlay.style.opacity = '0';
-        setTimeout(() => loadingOverlay.style.display = 'none', 500);
+    // Reveal Dashboard
+    if (appShell) {
+        appShell.classList.add('ready');
     }
 
-    // UI Greeting
+    // Populate Greeting
     const welcomeEl = document.getElementById('current-tab-title');
     if (welcomeEl && state.user?.email) {
         welcomeEl.textContent = `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
     }
 
+    // Initialize Modules
     await fetchBranches();
     setRange(7);
     await refreshData();
@@ -394,5 +388,5 @@ async function initDashboard() {
     if (window.lucide) lucide.createIcons();
 }
 
-// Global Entry Point
+// Bootstrap
 document.addEventListener("DOMContentLoaded", initDashboard);

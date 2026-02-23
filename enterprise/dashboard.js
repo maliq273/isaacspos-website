@@ -323,26 +323,27 @@ function initUIEvents() {
 }
 
 /**
- * Event-Based Session Handshake
- * This function uses a listener to wait indefinitely until the Supabase SDK 
- * confirms whether a session exists or not. No timeouts.
+ * Absolute Session Verification
+ * This waits as long as required for Supabase to notify its initial state.
+ * No timeouts. No redirects until the SDK gives a definitive NULL session.
  */
 async function getAuthenticatedSession() {
     return new Promise((resolve) => {
-        // Initial quick check
+        // Immediate poll
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 resolve(session);
             } else {
-                // If not immediate, wait for the INITIAL_SESSION event
+                // Wait for the SDK to emit its INITIAL_SESSION state
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                    if (event === 'INITIAL_SESSION') {
+                    console.log(`Auth Protocol Event: ${event}`);
+                    if (session) {
                         subscription.unsubscribe();
                         resolve(session);
-                    } else if (session) {
-                        // Catch signed-in event if it happens before initial_session fires
+                    } else if (event === 'INITIAL_SESSION') {
+                        // SDK confirms no session exists in local storage
                         subscription.unsubscribe();
-                        resolve(session);
+                        resolve(null);
                     }
                 });
             }
@@ -352,34 +353,31 @@ async function getAuthenticatedSession() {
 
 // Master Dashboard Entry Node
 async function initDashboard() {
-    console.log("Matrix Node: Verifying Uplink Integrity...");
+    console.log("Enterprise Node: Analyzing Authentication State...");
     const appShell = document.getElementById('main-app-shell');
 
-    // WAIT INDEFINITELY for confirmation
+    // Wait INDEFINITELY for confirmation from the registry
     const session = await getAuthenticatedSession();
 
     if (!session) {
-        console.error("Uplink Security Failure: Redirecting to Terminal.");
+        console.error("Authentication Registry Mismatch: Redirecting to Gatekeeper.");
         window.location.replace("index.html");
         return;
     }
 
-    // Success State
+    // Success: Hydrate state and reveal UI
     state.user = session.user;
-    console.log("Uplink Verified for node:", state.user.email);
+    console.log("Access Granted for:", state.user.email);
 
-    // Reveal Dashboard
     if (appShell) {
         appShell.classList.add('ready');
     }
 
-    // Populate Greeting
     const welcomeEl = document.getElementById('current-tab-title');
     if (welcomeEl && state.user?.email) {
         welcomeEl.textContent = `Node: ${state.user.email.split('@')[0].toUpperCase()}`;
     }
 
-    // Initialize Modules
     await fetchBranches();
     setRange(7);
     await refreshData();

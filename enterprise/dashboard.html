@@ -9,9 +9,19 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <style>
-        /* Prevents unauthenticated flashes. JS will add 'ready' class. */
+        :root { --emerald: #10b981; --dark: #050505; }
+        body { background-color: var(--dark); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; }
+        .industrial-grid {
+            background-color: var(--dark);
+            background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0);
+            background-size: 50px 50px;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
         #main-app-shell { 
             opacity: 0; 
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1); 
@@ -23,16 +33,46 @@
             pointer-events: auto; 
             transform: scale(1);
         }
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 30px;
+        }
+        .nav-btn {
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.4);
+            transition: all 0.2s;
+        }
+        .nav-btn.active { background: var(--emerald); color: #000; }
+        .filter-pill {
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.05);
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .filter-pill.active { color: var(--emerald); border: 1px solid var(--emerald); }
     </style>
 </head>
 <body class="bg-[#050505] text-white selection:bg-emerald-500 selection:text-black">
     
-    <div id="main-app-shell" class="flex h-screen overflow-hidden">
+    <div id="main-app-shell" class="flex h-screen overflow-hidden ready">
         <!-- Sidebar -->
         <aside class="w-80 glass border-r border-white/5 flex flex-col p-8 hidden lg:flex">
             <div class="flex items-center gap-4 mb-16">
                 <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
-                    <span class="text-xl font-black italic">I</span>
+                    <span class="text-xl font-black italic text-white">I</span>
                 </div>
                 <div class="flex flex-col">
                     <span class="text-sm font-black uppercase tracking-tighter">Enterprise</span>
@@ -58,7 +98,6 @@
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col overflow-y-auto industrial-grid">
-            <!-- Header Filters -->
             <header class="p-8 sticky top-0 z-50 glass border-b border-white/5 flex flex-wrap justify-between items-center gap-6">
                 <div class="flex flex-col">
                     <h2 id="current-tab-title" class="text-2xl font-black uppercase tracking-tighter">Performance Hub</h2>
@@ -71,7 +110,7 @@
                 <div class="flex flex-wrap items-center gap-4 bg-white/5 p-2 rounded-2xl">
                     <div class="flex items-center gap-2 px-4 border-r border-white/10">
                         <i data-lucide="home" class="w-4 h-4 text-emerald-500"></i>
-                        <select id="branch-selector" class="bg-transparent text-[10px] font-black uppercase outline-none cursor-pointer text-white/60 hover:text-white transition-colors">
+                        <select id="branch-selector" class="bg-transparent text-[10px] font-black uppercase outline-none cursor-pointer text-white/60">
                             <option value="all">Global Matrix (All Branches)</option>
                         </select>
                     </div>
@@ -81,114 +120,38 @@
                             <div class="filter-pill active" data-range="7">7D</div>
                             <div class="filter-pill" data-range="14">14D</div>
                             <div class="filter-pill" data-range="30">30D</div>
-                            <div class="filter-pill" data-range="custom">Custom</div>
-                        </div>
-                        <div id="custom-date-container" class="hidden flex items-center gap-2 ml-2">
-                            <input type="date" id="start-date" class="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] font-bold">
-                            <span class="opacity-20 text-[10px]">—</span>
-                            <input type="date" id="end-date" class="bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-[10px] font-bold">
                         </div>
                     </div>
                 </div>
             </header>
 
             <div class="p-8 space-y-12 max-w-7xl mx-auto w-full">
-                
-                <!-- PERFORMANCE TAB -->
-                <div id="tab-performance" class="tab-content space-y-12 reveal">
+                <div id="tab-performance" class="tab-content space-y-12">
                     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div class="dashboard-card">
                             <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Gross Revenue</div>
                             <div class="text-4xl font-black tracking-tighter text-white" id="stat-revenue">R0.00</div>
-                            <div class="mt-4 text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Real-time Yield</div>
                         </div>
                         <div class="dashboard-card">
                             <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Total Tips Logged</div>
                             <div class="text-4xl font-black tracking-tighter text-white" id="stat-tips">R0.00</div>
-                            <div class="mt-4 text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Staff Performance</div>
                         </div>
                         <div class="dashboard-card">
                             <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Inventory Value</div>
                             <div class="text-4xl font-black tracking-tighter text-white" id="stat-inventory">R0.00</div>
-                            <div class="mt-4 text-[9px] font-bold text-white/20 uppercase tracking-widest">Asset Liquidity</div>
                         </div>
                         <div class="dashboard-card">
                             <div class="text-[9px] font-black uppercase text-white/30 tracking-widest mb-4">Daily Average</div>
                             <div class="text-4xl font-black tracking-tighter text-white" id="stat-avg">R0.00</div>
-                            <div class="mt-4 text-[9px] font-bold text-white/20 uppercase tracking-widest">Revenue Velocity</div>
                         </div>
                     </div>
 
-                    <div class="dashboard-card overflow-hidden">
-                        <div class="flex justify-between items-center mb-10">
-                            <div>
-                                <h3 class="text-xl font-black uppercase">Revenue Velocity</h3>
-                                <p class="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1">Daily Breakdown for period</p>
-                            </div>
-                            <i data-lucide="trending-up" class="w-6 h-6 text-emerald-500"></i>
-                        </div>
+                    <div class="dashboard-card">
                         <div class="h-80 w-full">
                             <canvas id="revenue-chart"></canvas>
                         </div>
                     </div>
                 </div>
-
-                <!-- SALES JOURNAL TAB -->
-                <div id="tab-journal" class="tab-content hidden reveal">
-                    <div class="dashboard-card">
-                        <div class="flex justify-between items-center mb-8">
-                            <h3 class="text-xl font-black uppercase">Transactional Registry</h3>
-                            <button class="px-6 py-2 glass border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest hover:bg-white/5">Export CSV</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="border-b border-white/5 text-[10px] font-black uppercase text-white/30 tracking-widest">
-                                    <tr>
-                                        <th class="pb-6">Date</th>
-                                        <th class="pb-6">Folio #</th>
-                                        <th class="pb-6">Professional</th>
-                                        <th class="pb-6">Method</th>
-                                        <th class="pb-6 text-right">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="journal-tbody" class="text-sm font-medium">
-                                    <!-- Dynamic -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- TEAM STATS TAB -->
-                <div id="tab-team" class="tab-content hidden reveal">
-                    <div class="grid md:grid-cols-1 gap-8" id="team-stats-grid">
-                        <!-- Dynamic -->
-                    </div>
-                </div>
-
-                <!-- RECON LOGS TAB -->
-                <div id="tab-recon" class="tab-content hidden reveal">
-                    <div class="dashboard-card">
-                        <h3 class="text-xl font-black uppercase mb-8">Audit Reconciliation History</h3>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead class="border-b border-white/5 text-[10px] font-black uppercase text-white/30 tracking-widest">
-                                    <tr>
-                                        <th class="pb-6">Date</th>
-                                        <th class="pb-6">Branch</th>
-                                        <th class="pb-6">System Total</th>
-                                        <th class="pb-6">Variance</th>
-                                        <th class="pb-6 text-right">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="recon-tbody" class="text-sm font-medium">
-                                    <!-- Dynamic -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </main>
     </div>

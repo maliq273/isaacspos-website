@@ -80,9 +80,10 @@
 </div>
 
 <script>
+// Updated with correct Anon Public Key provided
 const supabase = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co",
-    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlc3B5c2dhcWZzdGFjaHZuc3ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzg0NTIsImV4cCI6MjA4NjgxNDQ1Mn0.uCg80UmYLtcUvpjIV_G7bRwQqJV1f-INKOWzfcendes"
 );
 
 lucide.createIcons();
@@ -98,6 +99,7 @@ toggleBtn.onclick = () => {
 
 document.getElementById('login-form').onsubmit = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
 
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -109,27 +111,39 @@ document.getElementById('login-form').onsubmit = async (e) => {
     if (!email || !password) return;
 
     errorBox.classList.add('hidden');
-    syncOverlay.classList.remove('hidden'); // SHOW THE HANDSHAKE IMMEDIATELY
+    syncOverlay.classList.remove('hidden');
     submitBtn.disabled = true;
 
     console.log("Gatekeeper: Initiating Indefinite Wait for Supabase Response...");
     
-    // NO TIMEOUTS. WE WAIT FOR SUPABASE TO FINISH.
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-        console.error("Handshake Refused:", error.message);
+        if (error) {
+            console.error("Handshake Refused:", error.message);
+            syncOverlay.classList.add('hidden');
+            errorMessage.textContent = `Protocol Error: ${error.message}`;
+            errorBox.classList.remove('hidden');
+            submitBtn.disabled = false;
+            return;
+        }
+
+        if (data.session) {
+            console.log("Handshake Verified. Permission Granted. Transitioning...");
+            // Extra delay not used, but replace ensures we move clean
+            window.location.replace("dashboard.html");
+        } else {
+            // Thumbs down
+            syncOverlay.classList.add('hidden');
+            errorMessage.textContent = "Access Denied: Invalid Credentials";
+            errorBox.classList.remove('hidden');
+            submitBtn.disabled = false;
+        }
+    } catch (err) {
         syncOverlay.classList.add('hidden');
-        errorMessage.textContent = `Protocol Error: ${error.message}`;
+        errorMessage.textContent = "System Fault: Handshake Interrupted";
         errorBox.classList.remove('hidden');
         submitBtn.disabled = false;
-        return;
-    }
-
-    if (data.session) {
-        console.log("Handshake Verified. Permission Granted for Dashboard Node.");
-        // Redirecting explicitly after the session is 100% established
-        window.location.replace("dashboard.html");
     }
 };
 </script>

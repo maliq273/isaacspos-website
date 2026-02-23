@@ -1,7 +1,7 @@
 // IsaacsPOS Enterprise Dashboard Logic
 const supabase = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co",
-    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlc3B5c2dhcWZzdGFjaHZuc3ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzg0NTIsImV4cCI6MjA4NjgxNDQ1Mn0.uCg80UmYLtcUvpjIV_G7bRwQqJV1f-INKOWzfcendes"
 );
 
 // State Management
@@ -323,25 +323,26 @@ function initUIEvents() {
 }
 
 /**
- * Absolute Session Verification
- * This waits as long as required for Supabase to notify its initial state.
- * No timeouts. No redirects until the SDK gives a definitive NULL session.
+ * Robust Auth State Handshake
+ * Waits for Supabase to signal its initial state before allowing or denying entry.
+ * No timeouts used.
  */
 async function getAuthenticatedSession() {
     return new Promise((resolve) => {
-        // Immediate poll
+        // Try getting it immediately
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
+                console.log("Session detected immediately.");
                 resolve(session);
             } else {
-                // Wait for the SDK to emit its INITIAL_SESSION state
+                // If not found, wait for the definitive INITIAL_SESSION event
                 const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                    console.log(`Auth Protocol Event: ${event}`);
+                    console.log(`Auth Event Detected: ${event}`);
                     if (session) {
                         subscription.unsubscribe();
                         resolve(session);
-                    } else if (event === 'INITIAL_SESSION') {
-                        // SDK confirms no session exists in local storage
+                    } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
+                        // SDK confirms no session exists
                         subscription.unsubscribe();
                         resolve(null);
                     }
@@ -353,19 +354,19 @@ async function getAuthenticatedSession() {
 
 // Master Dashboard Entry Node
 async function initDashboard() {
-    console.log("Enterprise Node: Analyzing Authentication State...");
+    console.log("Enterprise Node: Analyzing Uplink...");
     const appShell = document.getElementById('main-app-shell');
 
-    // Wait INDEFINITELY for confirmation from the registry
+    // WAIT INDEFINITELY for confirmation from the registry
     const session = await getAuthenticatedSession();
 
     if (!session) {
-        console.error("Authentication Registry Mismatch: Redirecting to Gatekeeper.");
+        console.error("Auth Protocol Failed: Redirecting to Gatekeeper.");
         window.location.replace("index.html");
         return;
     }
 
-    // Success: Hydrate state and reveal UI
+    // Success
     state.user = session.user;
     console.log("Access Granted for:", state.user.email);
 

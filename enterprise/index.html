@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { --emerald: #10b981; --dark: #000000; --card-bg: #0a0a0a; }
-        body { background-color: var(--dark); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; }
+        body { background-color: var(--dark); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; margin: 0; }
         .industrial-grid {
             background-color: var(--dark);
             background-image: radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.07) 1px, transparent 0);
@@ -63,14 +63,14 @@
     <div class="auth-card w-full max-w-md">
 
         <div class="mb-12 text-center">
-            <div class="w-20 h-20 bg-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-8">
+            <div class="w-20 h-20 bg-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-8">
                 <span class="text-4xl font-black italic text-white">I</span>
             </div>
             <h1 class="text-4xl font-black uppercase tracking-tighter">Enterprise Hub</h1>
         </div>
 
         <!-- Error Feedback -->
-        <div id="auth-error" class="hidden mb-8 p-5 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-400 text-xs font-black uppercase tracking-widest flex items-center gap-4">
+        <div id="auth-error" class="hidden mb-8 p-5 bg-red-500/10 border-2 border-red-500/30 rounded-2xl text-red-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-4">
             <i data-lucide="shield-alert" class="w-5 h-5"></i>
             <span id="error-message">Access Denied: Invalid Credentials</span>
         </div>
@@ -103,8 +103,8 @@
 </div>
 
 <script>
-// SINGLE DECLARATION OF SUPABASE
-const supabase = window.supabase.createClient(
+// Use 'sb' to avoid naming conflict with the global 'supabase' object provided by CDN
+const sb = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlc3B5c2dhcWZzdGFjaHZuc3ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyMzg0NTIsImV4cCI6MjA4NjgxNDQ1Mn0.uCg80UmYLtcUvpjIV_G7bRwQqJV1f-INKOWzfcendes"
 );
@@ -132,15 +132,13 @@ document.getElementById('login-form').onsubmit = async (e) => {
     const syncOverlay = document.getElementById('sync-overlay');
 
     errorBox.classList.add('hidden');
-    syncOverlay.classList.remove('hidden'); // THE HANDSHAKE IS THE ONLY THING USER SEES NOW
+    syncOverlay.classList.remove('hidden'); 
     submitBtn.disabled = true;
 
     try {
-        // WE WAIT INDEFINITELY HERE. 1 MINUTE OR 10 MINUTES, IT STAYS UNTIL RESPONSE.
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
         if (error) {
-            // THUMBS DOWN
             syncOverlay.classList.add('hidden');
             errorMessage.textContent = "Access Denied: Incorrect Identity or Cipher";
             errorBox.classList.remove('hidden');
@@ -149,8 +147,7 @@ document.getElementById('login-form').onsubmit = async (e) => {
         }
 
         if (data.session) {
-            // THUMBS UP
-            console.log("Security Protocol Satisfied. Diverting to Dashboard...");
+            // Handshake confirmed. Moving to secure dashboard.
             window.location.replace("dashboard.html");
         }
     } catch (err) {

@@ -10,19 +10,18 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;400;600;800&display=swap" rel="stylesheet">
-    <!-- Note: linking to styles.css as per existing project structure -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="bg-black text-white selection:bg-emerald-500 selection:text-black">
 
-<!-- Sync Overlay -->
-<div id="sync-overlay" class="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center hidden">
+<!-- Primary Secure Handshake Overlay -->
+<div id="sync-overlay" class="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center hidden">
     <div class="w-24 h-24 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-8"></div>
     <div class="text-center">
-        <div class="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500 mb-2">Protocol Execution</div>
-        <h2 class="text-2xl font-black uppercase tracking-tighter">Synchronizing Uplink</h2>
-        <p class="text-white/40 text-xs mt-4 font-bold uppercase tracking-widest">Validating Enterprise Credentials...</p>
+        <div class="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500 mb-2">Protocol Synchronization</div>
+        <h2 class="text-2xl font-black uppercase tracking-tighter">Establishing Secure Handshake</h2>
+        <p class="text-white/40 text-xs mt-4 font-bold uppercase tracking-widest animate-pulse">Waiting for Supabase Auth Response...</p>
     </div>
 </div>
 
@@ -109,12 +108,15 @@ document.getElementById('login-form').onsubmit = async (e) => {
     if (!email || !password) return;
 
     errorBox.classList.add('hidden');
-    syncOverlay.classList.remove('hidden');
+    syncOverlay.classList.remove('hidden'); // Show handshake overlay immediately
     submitBtn.disabled = true;
 
+    // WAIT INDEFINITELY for Supabase to respond
+    console.log("Awaiting Secure Handshake from Supabase...");
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+        console.error("Handshake Failed:", error.message);
         syncOverlay.classList.add('hidden');
         errorMessage.textContent = error.message;
         errorBox.classList.remove('hidden');
@@ -123,8 +125,8 @@ document.getElementById('login-form').onsubmit = async (e) => {
     }
 
     if (data.session) {
-        console.log("Matrix Synchronization Complete. Handshaking Dashboard...");
-        // Explicitly redirect after successful login is confirmed
+        console.log("Handshake Secured. Redirecting to Enterprise Dashboard.");
+        // We only move to dashboard.html once we have a definitive session object
         window.location.replace("dashboard.html");
     }
 };

@@ -323,52 +323,53 @@ function initUIEvents() {
 }
 
 /**
- * Robust Auth State Handshake
- * Waits for Supabase to signal its initial state before allowing or denying entry.
- * No timeouts used.
+ * PATIENT UPLINK PROTOCOL
+ * We wait for the INITIAL_SESSION event. This ensures the dashboard doesn't 
+ * redirect to login just because the SDK hasn't finished loading the session yet.
  */
 async function getAuthenticatedSession() {
     return new Promise((resolve) => {
-        // Try getting it immediately
+        // Step 1: Immediate check for an existing session
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
-                console.log("Session detected immediately.");
+                console.log("Matrix Uplink: Session detected on poll.");
                 resolve(session);
-            } else {
-                // If not found, wait for the definitive INITIAL_SESSION event
-                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-                    console.log(`Auth Event Detected: ${event}`);
-                    if (session) {
-                        subscription.unsubscribe();
-                        resolve(session);
-                    } else if (event === 'INITIAL_SESSION' || event === 'SIGNED_OUT') {
-                        // SDK confirms no session exists
-                        subscription.unsubscribe();
-                        resolve(null);
-                    }
-                });
+                return;
             }
+
+            // Step 2: Listen for the definitive state notification
+            const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+                console.log(`Matrix Uplink Event: ${event}`);
+                
+                if (session) {
+                    subscription.unsubscribe();
+                    resolve(session);
+                } else if (event === 'INITIAL_SESSION') {
+                    // SDK has checked all local storage and confirmed NO session exists.
+                    subscription.unsubscribe();
+                    resolve(null);
+                }
+            });
         });
     });
 }
 
 // Master Dashboard Entry Node
 async function initDashboard() {
-    console.log("Enterprise Node: Analyzing Uplink...");
     const appShell = document.getElementById('main-app-shell');
+    console.log("Dashboard Node: Initializing Security Handshake...");
 
-    // WAIT INDEFINITELY for confirmation from the registry
     const session = await getAuthenticatedSession();
 
     if (!session) {
-        console.error("Auth Protocol Failed: Redirecting to Gatekeeper.");
+        console.error("Dashboard Security Failure: No validated session found. Diverting back to Gatekeeper.");
         window.location.replace("index.html");
         return;
     }
 
-    // Success
+    // Success State
     state.user = session.user;
-    console.log("Access Granted for:", state.user.email);
+    console.log("Access Granted for node identity:", state.user.email);
 
     if (appShell) {
         appShell.classList.add('ready');

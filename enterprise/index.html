@@ -76,34 +76,43 @@
             submitBtn.textContent = "Negotiating Protocol...";
             errorDiv.classList.add('hidden');
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
 
-            if (error) {
-                errorMessage.textContent = error.message;
+                if (error) throw error;
+
+                // 1. Fetch Profile/Company Context
+                let companyId = data.user.id;
+                let companyName = "Isaacs Strategic Group";
+
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('company_id, company_name')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (profile) {
+                    companyId = profile.company_id || companyId;
+                    companyName = profile.company_name || companyName;
+                }
+
+                // 2. Set Local Storage (Crucial for Dashboard)
+                localStorage.setItem("company_id", companyId);
+                localStorage.setItem("company_name", companyName);
+                localStorage.setItem("branch_id", "all");
+
+                // 3. Final Handover
+                window.location.href = "dashboard.html";
+
+            } catch (err) {
+                errorMessage.textContent = err.message;
                 errorDiv.classList.remove('hidden');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Initiate Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>';
                 lucide.createIcons();
-            } else {
-                // Fetch profile metadata
-                const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('company_id, company_name, id')
-                    .eq('id', data.user.id)
-                    .single();
-
-                const companyId = profile?.company_id || data.user.id;
-                const companyName = profile?.company_name || "Isaacs Strategic Group";
-
-                // CRITICAL LOCAL STORAGE SETS
-                localStorage.setItem("company_id", companyId);
-                localStorage.setItem("company_name", companyName);
-                localStorage.setItem("branch_id", "all");
-                
-                window.location.href = "dashboard.html";
             }
         };
     </script>

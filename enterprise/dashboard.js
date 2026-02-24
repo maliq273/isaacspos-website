@@ -1,4 +1,3 @@
-
 // Initialize Supabase Client
 const supabase = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co", 
@@ -8,11 +7,10 @@ const supabase = window.supabase.createClient(
 // APP STATE
 const appState = {
     user: null,
-    companyId: null,
     company: { name: "Loading...", id: null },
     branches: [],
     selectedBranch: 'all',
-    dateRange: 30, // days
+    dateRange: 30,
     customStart: null,
     customEnd: null,
     currentView: 'performance',
@@ -23,162 +21,197 @@ const appState = {
  * INITIALIZATION CYCLE
  */
 async function init() {
-    // 1. Recover Session State
-    appState.companyId = localStorage.getItem("company_id");
-    appState.company.name = localStorage.getItem("company_name") || "Isaacs Strategic Group";
-    appState.selectedBranch = localStorage.getItem("branch_id") || 'all';
-
-    // 2. Auth Check
+    // 1. Session Handshake
     const { data: { session } } = await supabase.auth.getSession();
-    
-    // Safety: If no session OR no company ID, we cannot proceed
-    if (!session || !appState.companyId) {
-        console.error("Session invalid or Context missing. Resetting Uplink.");
-        localStorage.clear();
-        window.location.href = "index.html";
-        return;
-    }
+    if (!session) { window.location.href = "index.html"; return; }
     
     appState.user = session.user;
     document.getElementById('user-email-sidebar').textContent = appState.user.email;
-    document.getElementById('sidebar-company-name').textContent = appState.company.name;
 
-    // 3. Populate Infrastructure
-    await fetchBranchNetwork();
-    
-    // 4. Bind System Events
+    // 2. Fetch Company Identity
+    await fetchCompanyProfile();
+
+    // 3. Fetch Branch Network
+    await fetchBranches();
+
+    // 4. Setup Global Listeners
     setupEventListeners();
     
-    // 5. Initial Data Rendering
+    // 5. Initial Render
     refreshUI();
     
     if (window.lucide) lucide.createIcons();
 }
 
 /**
- * INFRASTRUCTURE: BRANCH MESH
+ * DATA FETCHING ENGINE
  */
-async function fetchBranchNetwork() {
-    // Attempt to pull real branch data for this company
-    const { data: branches, error } = await supabase
-        .from("branches")
-        .select("*")
-        .eq("company_id", appState.companyId);
+async function fetchCompanyProfile() {
+    // Try to get company name from user metadata first (fastest)
+    let companyName = appState.user.user_metadata?.company_name;
 
-    if (error || !branches || branches.length === 0) {
-        console.warn("Using simulated network nodes for current company context.");
-        appState.branches = [
-            { id: 'br-hq', name: 'Isaacs HQ (Cape Town)', inventory_value: 85000, company_id: appState.companyId },
-            { id: 'br-st', name: 'Isaacs Stellenbosch', inventory_value: 42000, company_id: appState.companyId },
-            { id: 'br-cl', name: 'Isaacs Claremont', inventory_value: 31000, company_id: appState.companyId }
-        ];
+    if (!companyName) {
+        // Fallback to querying a profiles/companies table
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('company_name')
+            .eq('id', appState.user.id)
+            .single();
+        
+        if (!error && data) companyName = data.company_name;
+    }
+
+    // Default if nothing found
+    appState.company.name = companyName || "Isaacs Strategic Group";
+    document.getElementById('sidebar-company-name').textContent = appState.company.name;
+}
+
+async function fetchBranches() {
+    // Query branches table for this user
+    const { data, error } = await supabase
+        .from('branches')
+        .select('*')
+        .eq('owner_id', appState.user.id);
+
+    if (error) {
+        console.error("Error fetching branches:", error);
+        // If table doesn't exist yet, we keep it empty or show placeholder logic
+        appState.branches = [];
     } else {
-        appState.branches = branches;
+        appState.branches = data || [];
     }
 
     const selector = document.getElementById('branch-selector');
-    selector.innerHTML = '<option value="all" class="bg-black">All Enterprise Branches</option>';
+    // Clear except "All"
+    selector.innerHTML = '<option value="all" class="bg-black">All Network Nodes</option>';
     
     appState.branches.forEach(b => {
         const opt = document.createElement('option');
         opt.value = b.id;
         opt.textContent = b.name;
         opt.className = "bg-black";
-        if (b.id === appState.selectedBranch) opt.selected = true;
         selector.appendChild(opt);
     });
 }
 
 /**
- * DATA ANALYSIS ENGINE
- */
-async function loadPerformanceData() {
-    const { startDate, endDate } = getDateBounds();
-
-    // Determine Branch Context
-    let targetBranchIds = appState.selectedBranch === 'all' 
-        ? appState.branches.map(b => b.id) 
-        : [appState.selectedBranch];
-
-    // Parallel Queries for speed
-    const [salesRes, productsRes] = await Promise.all([
-        supabase.from("sales").select("*")
-            .in("branch_id", targetBranchIds)
-            .gte("created_at", startDate.toISOString())
-            .lte("created_at", endDate.toISOString()),
-        supabase.from("products").select("id").in("branch_id", targetBranchIds)
-    ]);
-
-    // Data Processing & Aggregation
-    const sales = salesRes.data || generateMockSales(startDate, endDate);
-    const productsCount = (productsRes.data?.length) || 125;
-
-    const grossRevenue = sales.reduce((sum, s) => sum + (s.total_amount || 0), 0);
-    const totalTips = sales.reduce((sum, s) => sum + (s.tip_amount || 0), 0);
-    
-    const todayStr = new Date().toISOString().split("T")[0];
-    const dailyAverage = sales.filter(s => s.created_at.startsWith(todayStr))
-                             .reduce((sum, s) => sum + (s.total_amount || 0), 0);
-
-    const revenueVelocity = grossRevenue / 30;
-
-    return { grossRevenue, totalTips, inventoryCount: productsCount, dailyAverage, revenueVelocity, allSales: sales };
-}
-
-/**
- * UI SYNC ENGINE
+ * RE-RENDER LOGIC
  */
 async function refreshUI() {
-    const pulse = document.getElementById('sync-pulse');
-    if (pulse) pulse.classList.add('animate-ping');
+    const data = await getFilteredStats();
+    
+    // Performance Tab
+    if (appState.currentView === 'performance') {
+        renderPerformance(data);
+    } 
+    // Journal Tab
+    else if (appState.currentView === 'journal') {
+        renderJournal(data);
+    }
+    // Team Tab
+    else if (appState.currentView === 'team') {
+        renderTeam(data);
+    }
+    // Recon Tab
+    else if (appState.currentView === 'recon') {
+        renderRecon(data);
+    }
 
-    const stats = await loadPerformanceData();
-
-    // DOM Binding
-    document.getElementById("grossRevenue").innerText = "R " + stats.grossRevenue.toFixed(2);
-    document.getElementById("totalTips").innerText = "R " + stats.totalTips.toFixed(2);
-    document.getElementById("inventoryCount").innerText = stats.inventoryCount;
-    document.getElementById("dailyAverage").innerText = "R " + stats.dailyAverage.toFixed(2);
-    document.getElementById("revenueVelocity").innerText = "R " + stats.revenueVelocity.toFixed(2) + " / Cycle";
-
-    // View Dissemination
-    if (appState.currentView === 'performance') renderVelocityChart(stats.allSales);
-    else if (appState.currentView === 'journal') renderSalesJournal(stats.allSales);
-    else if (appState.currentView === 'team') renderTeamStats(stats.allSales);
-
-    if (pulse) pulse.classList.remove('animate-ping');
     if (window.lucide) lucide.createIcons();
 }
 
 /**
- * VISUALIZATIONS
+ * DYNAMIC STATS COMPILER
  */
-function renderVelocityChart(sales) {
-    const ctx = document.getElementById('velocityChart').getContext('2d');
-    if (appState.chart) appState.chart.destroy();
+async function getFilteredStats() {
+    const { startDate, endDate } = getDateBounds();
+    
+    // We build queries based on selected branch
+    let txQuery = supabase.from('transactions').select('*');
+    let reconQuery = supabase.from('reconciliation').select('*');
+    let staffQuery = supabase.from('staff_logs').select('*');
 
+    if (appState.selectedBranch !== 'all') {
+        txQuery = txQuery.eq('branch_id', appState.selectedBranch);
+        reconQuery = reconQuery.eq('branch_id', appState.selectedBranch);
+        staffQuery = staffQuery.eq('branch_id', appState.selectedBranch);
+    }
+
+    // Filter by date
+    txQuery = txQuery.gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
+    reconQuery = reconQuery.gte('date', startDate.toISOString().split('T')[0]).lte('date', endDate.toISOString().split('T')[0]);
+
+    // Execute queries in parallel
+    const [txRes, reconRes, staffRes] = await Promise.all([txQuery, reconQuery, staffQuery]);
+
+    // Calculate dynamic inventory (sum of selected branches)
+    const activeBranches = appState.selectedBranch === 'all' ? appState.branches : appState.branches.filter(b => b.id === appState.selectedBranch);
+    const totalInventory = activeBranches.reduce((acc, b) => acc + (b.inventory_value || 0), 0);
+
+    return {
+        transactions: txRes.data || [],
+        reconLogs: reconRes.data || [],
+        staff: staffRes.data || [],
+        totalInventory,
+        branches: activeBranches
+    };
+}
+
+function getDateBounds() {
+    const now = new Date();
+    let startDate, endDate;
+
+    if (appState.dateRange === 'custom') {
+        startDate = new Date(appState.customStart);
+        endDate = new Date(appState.customEnd);
+    } else {
+        startDate = new Date();
+        startDate.setDate(now.getDate() - appState.dateRange);
+        endDate = new Date();
+    }
+    return { startDate, endDate };
+}
+
+/**
+ * UI RENDERERS
+ */
+function renderPerformance(data) {
+    const totalRevenue = data.transactions.reduce((acc, t) => acc + (t.amount || 0), 0);
+    const totalTips = data.staff.reduce((acc, s) => acc + (s.tips || 0), 0);
+    const days = appState.dateRange === 'custom' ? 14 : appState.dateRange;
+    const avg = totalRevenue / (days || 1);
+
+    document.getElementById('stat-revenue').textContent = `R${totalRevenue.toLocaleString()}`;
+    document.getElementById('stat-tips').textContent = `R${totalTips.toLocaleString()}`;
+    document.getElementById('stat-inventory').textContent = `R${data.totalInventory.toLocaleString()}`;
+    document.getElementById('stat-avg').textContent = `R${avg.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+
+    // Update Velocity Chart
     const dailyData = {};
-    sales.forEach(s => {
-        const d = s.created_at.split('T')[0];
-        dailyData[d] = (dailyData[d] || 0) + (s.total_amount || 0);
+    data.transactions.forEach(t => {
+        const dateKey = t.created_at.split('T')[0];
+        dailyData[dateKey] = (dailyData[dateKey] || 0) + t.amount;
     });
 
     const labels = Object.keys(dailyData).sort();
     const values = labels.map(l => dailyData[l]);
+
+    const ctx = document.getElementById('velocityChart').getContext('2d');
+    if (appState.chart) appState.chart.destroy();
 
     appState.chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels,
             datasets: [{
-                label: 'Revenue Flow',
+                label: 'Revenue',
                 data: values,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 fill: true,
                 tension: 0.4,
-                borderWidth: 4,
-                pointRadius: 5,
+                borderWidth: 3,
+                pointRadius: 4,
                 pointBackgroundColor: '#10b981'
             }]
         },
@@ -194,99 +227,112 @@ function renderVelocityChart(sales) {
     });
 }
 
-function renderSalesJournal(sales) {
+function renderJournal(data) {
     const body = document.getElementById('journal-body');
     body.innerHTML = '';
-    sales.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(s => {
-        const branch = appState.branches.find(b => b.id === s.branch_id);
+    
+    if (data.transactions.length === 0) {
+        body.innerHTML = '<tr><td colspan="6" class="p-12 text-center text-white/20 italic">No transactions found for this period.</td></tr>';
+        return;
+    }
+
+    data.transactions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(t => {
+        const branch = appState.branches.find(b => b.id === t.branch_id);
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="p-8 font-bold opacity-40">${new Date(s.created_at).toLocaleDateString()}</td>
-            <td class="p-8 font-black">${s.folio_number || 'INV-'+Math.floor(Math.random()*9000+1000)}</td>
-            <td class="p-8 opacity-70">${s.staff_name || 'System Operator'}</td>
-            <td class="p-8 text-right font-black">R${(s.total_amount || 0).toFixed(2)}</td>
-            <td class="p-8"><span class="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase font-black">${s.payment_type || 'Card'}</span></td>
-            <td class="p-8 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">${branch ? branch.name : 'Master Node'}</td>
+            <td class="p-8 font-bold opacity-40">${new Date(t.created_at).toLocaleDateString()}</td>
+            <td class="p-8 font-black">${t.folio_number || 'INV-000'}</td>
+            <td class="p-8 opacity-70">${t.staff_name || 'System'}</td>
+            <td class="p-8 text-right font-black">R${(t.amount || 0).toFixed(2)}</td>
+            <td class="p-8">
+                <span class="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase font-black">${t.payment_type || 'Card'}</span>
+            </td>
+            <td class="p-8 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">${branch?.name || 'Master'}</td>
         `;
         body.appendChild(row);
     });
 }
 
-function renderTeamStats(sales) {
+function renderTeam(data) {
     const container = document.getElementById('team-stats-container');
     container.innerHTML = '';
-    const stats = {};
-    sales.forEach(s => {
-        const name = s.staff_name || 'System Operator';
-        if (!stats[name]) stats[name] = { sales: 0, visits: 0, tips: 0 };
-        stats[name].sales += (s.total_amount || 0);
-        stats[name].visits += 1;
-        stats[name].tips += (s.tip_amount || 0);
-    });
+    
+    if (data.staff.length === 0) {
+        container.innerHTML = '<div class="col-span-full p-24 glass text-center text-white/20">No staff data synced for this range.</div>';
+        return;
+    }
 
-    Object.entries(stats).forEach(([name, data]) => {
+    data.staff.forEach(s => {
         const card = document.createElement('div');
         card.className = "stat-card group hover:border-emerald-500/30";
         card.innerHTML = `
             <div class="flex justify-between items-center mb-6">
-                <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-emerald-500"><i data-lucide="user"></i></div>
-                <div class="text-right"><div class="text-[10px] font-black uppercase text-emerald-500">${data.visits} Visits</div></div>
+                <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-emerald-500">
+                    <i data-lucide="user"></i>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-black uppercase text-emerald-500">${s.visits || 0} Visits</div>
+                </div>
             </div>
-            <h4 class="text-lg font-black uppercase tracking-tighter mb-1">${name}</h4>
+            <h4 class="text-lg font-black uppercase tracking-tighter mb-1">${s.name}</h4>
             <div class="mt-8 pt-8 border-t border-white/5 space-y-4">
-                <div class="flex justify-between items-center"><span class="text-[9px] font-black uppercase text-white/30">Gross Sales</span><span class="text-sm font-black tracking-tighter">R${data.sales.toLocaleString()}</span></div>
-                <div class="flex justify-between items-center"><span class="text-[9px] font-black uppercase text-white/30">Tips Logged</span><span class="text-sm font-black tracking-tighter text-emerald-500">R${data.tips.toLocaleString()}</span></div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[9px] font-black uppercase text-white/30">Gross Sales</span>
+                    <span class="text-sm font-black tracking-tighter">R${(s.gross_sales || 0).toLocaleString()}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[9px] font-black uppercase text-white/30">Tips Logged</span>
+                    <span class="text-sm font-black tracking-tighter text-emerald-500">R${(s.tips || 0).toLocaleString()}</span>
+                </div>
             </div>
         `;
         container.appendChild(card);
     });
 }
 
-/**
- * UTILITIES & LISTENERS
- */
-function getDateBounds() {
-    let start, end;
-    if (appState.dateRange === 'custom') {
-        start = new Date(appState.customStart);
-        end = new Date(appState.customEnd);
-    } else {
-        end = new Date();
-        start = new Date();
-        start.setDate(end.getDate() - appState.dateRange);
+function renderRecon(data) {
+    const body = document.getElementById('recon-body');
+    body.innerHTML = '';
+
+    if (data.reconLogs.length === 0) {
+        body.innerHTML = '<tr><td colspan="9" class="p-12 text-center text-white/20 italic">No reconciliation data found.</td></tr>';
+        return;
     }
-    return { startDate: start, endDate: end };
+
+    data.reconLogs.forEach(r => {
+        const branch = appState.branches.find(b => b.id === r.branch_id);
+        const row = document.createElement('tr');
+        const statusColor = r.status === 'Balanced' ? 'text-emerald-500' : 'text-rose-500';
+        row.innerHTML = `
+            <td class="p-8 font-bold opacity-40">${r.date}</td>
+            <td class="p-8 text-[10px] font-black uppercase text-white/40">${branch?.name || 'Unknown'}</td>
+            <td class="p-8 text-right opacity-60">R${(r.cash_total || 0).toFixed(2)}</td>
+            <td class="p-8 text-right opacity-60">R${(r.card_total || 0).toFixed(2)}</td>
+            <td class="p-8 text-right opacity-60">R${(r.wallet_total || 0).toFixed(2)}</td>
+            <td class="p-8 text-right opacity-60">R${(r.package_total || 0).toFixed(2)}</td>
+            <td class="p-8 text-right font-black text-emerald-500">R${(r.system_total || 0).toFixed(2)}</td>
+            <td class="p-8 font-black ${statusColor}">R${(r.variance || 0).toFixed(2)}</td>
+            <td class="p-8"><span class="px-3 py-1 bg-white/5 rounded-lg text-[9px] font-black uppercase ${statusColor}">${r.status}</span></td>
+        `;
+        body.appendChild(row);
+    });
 }
 
+/**
+ * EVENT COORDINATION
+ */
 function setupEventListeners() {
-    // Navigation Routing
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.onclick = () => {
-            const view = btn.getAttribute('data-view');
-            if (view === 'settings') return;
-            appState.currentView = view;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(`view-${view}`).classList.add('active');
-            document.getElementById('view-title').textContent = btn.innerText.trim();
-            refreshUI();
-            closeMobileNav();
-        };
-    });
-
-    // Branch Filter
+    // Branch Selector
     document.getElementById('branch-selector').onchange = (e) => {
         appState.selectedBranch = e.target.value;
-        localStorage.setItem("branch_id", e.target.value);
         refreshUI();
     };
 
-    // Date Presets
+    // Date Filters
     document.querySelectorAll('.date-filter-btn').forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active-filter'));
-            btn.classList.add('active-filter');
+            document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active-filter', 'bg-emerald-600/20'));
+            btn.classList.add('active-filter', 'bg-emerald-600/20');
             appState.dateRange = parseInt(btn.getAttribute('data-days'));
             appState.customStart = null;
             document.getElementById('custom-date-range').classList.add('hidden');
@@ -298,9 +344,44 @@ function setupEventListeners() {
         document.getElementById('custom-date-range').classList.toggle('hidden');
     };
 
-    // Logout Routine
+    const updateCustom = () => {
+        const s = document.getElementById('date-start').value;
+        const e = document.getElementById('date-end').value;
+        if (s && e) {
+            appState.customStart = s;
+            appState.customEnd = e;
+            appState.dateRange = 'custom';
+            refreshUI();
+        }
+    };
+    document.getElementById('date-start').onchange = updateCustom;
+    document.getElementById('date-end').onchange = updateCustom;
+
+    // View Switching
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.onclick = () => {
+            const view = btn.getAttribute('data-view');
+            appState.currentView = view;
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            
+            document.getElementById('view-title').textContent = btn.textContent.trim();
+            refreshUI();
+            closeMobileNav();
+        };
+    });
+
+    // Mobile Navigation
+    document.getElementById('open-mobile-btn').onclick = () => document.getElementById('mobile-nav').classList.add('open');
+    document.getElementById('close-mobile-btn').onclick = closeMobileNav;
+    document.getElementById('nav-close-overlay').onclick = closeMobileNav;
+
+    // Logout
     document.getElementById('logout-btn').onclick = async () => {
-        localStorage.clear();
         await supabase.auth.signOut();
         window.location.href = "index.html";
     };
@@ -308,27 +389,5 @@ function setupEventListeners() {
 
 function closeMobileNav() { document.getElementById('mobile-nav').classList.remove('open'); }
 
-/**
- * SAFETY MOCK DATA
- */
-function generateMockSales(start, end) {
-    const data = [];
-    const staff = ['David Director', 'Sarah Stylist', 'Emma Junior'];
-    let curr = new Date(start);
-    while (curr <= end) {
-        const count = 15;
-        for(let i=0; i<count; i++) {
-            data.push({
-                created_at: curr.toISOString(),
-                total_amount: 500 + Math.random() * 500,
-                tip_amount: 50 + Math.random() * 50,
-                branch_id: appState.branches[Math.floor(Math.random() * appState.branches.length)]?.id,
-                staff_name: staff[Math.floor(Math.random() * staff.length)]
-            });
-        }
-        curr.setDate(curr.getDate() + 1);
-    }
-    return data;
-}
-
+// Initialize lifecycle
 document.addEventListener('DOMContentLoaded', init);

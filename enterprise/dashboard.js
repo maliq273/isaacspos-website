@@ -1,8 +1,16 @@
 // Initialize Supabase Client
-const supabase = window.supabase.createClient(
-    "https://pespysgaqfstachvnsvr.supabase.co", 
-    "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
-);
+console.log("[IsaacsPOS] Dashboard Logic Engaged");
+
+let supabase;
+try {
+    supabase = window.supabase.createClient(
+        "https://pespysgaqfstachvnsvr.supabase.co", 
+        "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
+    );
+    console.log("[IsaacsPOS] Dashboard Supabase Client Active");
+} catch (err) {
+    console.error("[IsaacsPOS] Dashboard Supabase Init Failed:", err);
+}
 
 // APP STATE
 const appState = {
@@ -141,8 +149,16 @@ async function getFilteredStats() {
     txQuery = txQuery.gte('created_at', startDate.toISOString()).lte('created_at', endDate.toISOString());
     reconQuery = reconQuery.gte('date', startDate.toISOString().split('T')[0]).lte('date', endDate.toISOString().split('T')[0]);
 
-    // Execute queries in parallel
-    const [txRes, reconRes, staffRes] = await Promise.all([txQuery, reconQuery, staffQuery]);
+    // Execute queries in parallel with individual error handling
+    const [txRes, reconRes, staffRes] = await Promise.all([
+        txQuery.catch(err => ({ data: [], error: err })),
+        reconQuery.catch(err => ({ data: [], error: err })),
+        staffQuery.catch(err => ({ data: [], error: err }))
+    ]);
+
+    if (txRes.error) console.warn("Transaction fetch failed:", txRes.error);
+    if (reconRes.error) console.warn("Recon fetch failed:", reconRes.error);
+    if (staffRes.error) console.warn("Staff fetch failed:", staffRes.error);
 
     // Calculate dynamic inventory (sum of selected branches)
     const activeBranches = appState.selectedBranch === 'all' ? appState.branches : appState.branches.filter(b => b.id === appState.selectedBranch);

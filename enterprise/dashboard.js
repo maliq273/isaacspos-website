@@ -29,9 +29,24 @@ const appState = {
  * INITIALIZATION CYCLE
  */
 async function init() {
-    // 1. Session Handshake
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = "index.html"; return; }
+    console.log("[IsaacsPOS] Initiating Session Handshake...");
+    
+    // 1. Session Handshake with retry for environment sync
+    let session = null;
+    for (let i = 0; i < 3; i++) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
+            session = data.session;
+            break;
+        }
+        await new Promise(r => setTimeout(r, 500));
+    }
+
+    if (!session) { 
+        console.warn("[IsaacsPOS] No valid session detected. Redirecting to terminal.");
+        window.location.href = "index.html"; 
+        return; 
+    }
     
     appState.user = session.user;
     document.getElementById('user-email-sidebar').textContent = appState.user.email;

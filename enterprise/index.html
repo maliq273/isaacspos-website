@@ -62,59 +62,83 @@
     <script>
         console.log("[IsaacsPOS] Login Protocol Initialized");
         
-        if (!window.supabase) {
-            console.error("[IsaacsPOS] Critical Error: Supabase SDK not detected.");
-            alert("System Error: Security SDK failed to load. Please refresh.");
-        }
-        
         let supabase;
-        try {
-            supabase = window.supabase.createClient(
-              "https://pespysgaqfstachvnsvr.supabase.co", 
-              "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
-            );
-            console.log("[IsaacsPOS] Supabase Client Created Successfully");
-        } catch (err) {
-            console.error("[IsaacsPOS] Supabase Initialization Failed:", err);
-            alert("Connection Error: Failed to initialize security protocol.");
-        }
-
-        lucide.createIcons();
-
-        document.getElementById('login-form').onsubmit = async (e) => {
-            e.preventDefault();
-            console.log("[IsaacsPOS] Attempting Uplink...");
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const submitBtn = document.getElementById('submit-btn');
-            const errorDiv = document.getElementById('auth-error');
-            const errorMessage = document.getElementById('error-message');
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Negotiating Protocol...";
-            errorDiv.classList.add('hidden');
-
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password
-            });
-
-            if (error) {
-                // Map common errors to industrial phrasing
-                let friendlyError = error.message;
-                if (error.status === 400) friendlyError = "Invalid Access Credentials. Uplink Rejected.";
-                if (error.status === 422) friendlyError = "Protocol Error: Malformed Identity String.";
+        
+        // Initialize system once SDK is confirmed
+        const startSystem = () => {
+            try {
+                if (!window.supabase) {
+                    console.warn("[IsaacsPOS] SDK Delay. Retrying handshake...");
+                    setTimeout(startSystem, 500);
+                    return;
+                }
                 
-                errorMessage.textContent = friendlyError;
-                errorDiv.classList.remove('hidden');
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Initiate Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>';
-                lucide.createIcons();
-            } else {
-                // Successful login redirects to the dashboard
-                window.location.href = "dashboard.html";
+                supabase = window.supabase.createClient(
+                  "https://pespysgaqfstachvnsvr.supabase.co", 
+                  "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
+                );
+                console.log("[IsaacsPOS] Supabase Client Created Successfully");
+                attachFormHandler();
+            } catch (err) {
+                console.error("[IsaacsPOS] Supabase Initialization Failed:", err);
             }
         };
+
+        const attachFormHandler = () => {
+            const form = document.getElementById('login-form');
+            if (!form) return;
+
+            form.onsubmit = async (e) => {
+                e.preventDefault();
+                console.log("[IsaacsPOS] Attempting Uplink...");
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const submitBtn = document.getElementById('submit-btn');
+                const errorDiv = document.getElementById('auth-error');
+                const errorMessage = document.getElementById('error-message');
+
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Negotiating Protocol...";
+                errorDiv.classList.add('hidden');
+
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email,
+                        password
+                    });
+
+                    if (error) {
+                        let friendlyError = error.message;
+                        if (error.status === 400) friendlyError = "Invalid Access Credentials. Uplink Rejected.";
+                        if (error.status === 422) friendlyError = "Protocol Error: Malformed Identity String.";
+                        
+                        errorMessage.textContent = friendlyError;
+                        errorDiv.classList.remove('hidden');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Initiate Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+                        lucide.createIcons();
+                    } else {
+                        console.log("[IsaacsPOS] Auth Success. Synchronizing Session...");
+                        // Ensure session is written to storage before moving
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session) {
+                            window.location.href = "dashboard.html";
+                        } else {
+                            throw new Error("Session Sync Timeout");
+                        }
+                    }
+                } catch (err) {
+                    errorMessage.textContent = "Uplink Failure: Remote Node Unreachable.";
+                    errorDiv.classList.remove('hidden');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Retry Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+                }
+            };
+        };
+
+        lucide.createIcons();
+        startSystem();
     </script>
 </body>
 </html>

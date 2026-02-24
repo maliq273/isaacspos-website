@@ -115,6 +115,13 @@
                         </select>
                     </div>
                     
+                    <div class="flex items-center gap-2 px-4 border-r border-white/10">
+                        <i data-lucide="calendar" class="w-4 h-4 text-emerald-500"></i>
+                        <input type="date" id="start-date" class="bg-transparent text-[10px] font-black uppercase outline-none cursor-pointer text-white/60">
+                        <span class="text-white/20">to</span>
+                        <input type="date" id="end-date" class="bg-transparent text-[10px] font-black uppercase outline-none cursor-pointer text-white/60">
+                    </div>
+
                     <div class="flex items-center gap-2">
                         <div class="filter-pills flex gap-1">
                             <div class="filter-pill active" data-range="7">7D</div>
@@ -122,10 +129,15 @@
                             <div class="filter-pill" data-range="30">30D</div>
                         </div>
                     </div>
+
+                    <button id="print-global-btn" class="ml-4 p-3 glass rounded-xl hover:bg-emerald-500 hover:text-black transition-all">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                    </button>
                 </div>
             </header>
 
             <div class="p-8 space-y-12 max-w-7xl mx-auto w-full">
+                <!-- Performance Tab -->
                 <div id="tab-performance" class="tab-content space-y-12">
                     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <div class="dashboard-card">
@@ -149,6 +161,94 @@
                     <div class="dashboard-card">
                         <div class="h-80 w-full">
                             <canvas id="revenue-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sales Journal Tab -->
+                <div id="tab-journal" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-black uppercase tracking-tighter">Sales Registry</h3>
+                        <button onclick="window.printSection('tab-journal')" class="btn-glass flex items-center gap-2">
+                            <i data-lucide="printer" class="w-4 h-4"></i> Print Journal
+                        </button>
+                    </div>
+                    <div class="dashboard-card overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[9px] font-black uppercase tracking-widest text-white/30 border-b border-white/5">
+                                    <th class="pb-4">ID</th>
+                                    <th class="pb-4">Date</th>
+                                    <th class="pb-4">Branch</th>
+                                    <th class="pb-4">Staff</th>
+                                    <th class="pb-4">Method</th>
+                                    <th class="pb-4">Tip</th>
+                                    <th class="pb-4">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody id="journal-body" class="text-sm font-medium">
+                                <!-- Data injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Team Stats Tab -->
+                <div id="tab-team" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-black uppercase tracking-tighter">Staff Performance</h3>
+                        <button onclick="window.printSection('tab-team')" class="btn-glass flex items-center gap-2">
+                            <i data-lucide="printer" class="w-4 h-4"></i> Print Team Report
+                        </button>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8" id="team-cards">
+                        <!-- Staff cards injected here -->
+                    </div>
+                </div>
+
+                <!-- Recon Logs Tab -->
+                <div id="tab-recon" class="tab-content hidden space-y-8">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-black uppercase tracking-tighter">Reconciliation Audit</h3>
+                        <button onclick="window.printSection('tab-recon')" class="btn-glass flex items-center gap-2">
+                            <i data-lucide="printer" class="w-4 h-4"></i> Print Recon Log
+                        </button>
+                    </div>
+                    <div class="dashboard-card overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="text-[9px] font-black uppercase tracking-widest text-white/30 border-b border-white/5">
+                                    <th class="pb-4">Date</th>
+                                    <th class="pb-4">Cash</th>
+                                    <th class="pb-4">Card</th>
+                                    <th class="pb-4">Wallet</th>
+                                    <th class="pb-4">System</th>
+                                    <th class="pb-4">Variance</th>
+                                    <th class="pb-4">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recon-body" class="text-sm font-medium">
+                                <!-- Data injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Settings/System Node Tab -->
+                <div id="tab-settings" class="tab-content hidden space-y-8">
+                    <h3 class="text-xl font-black uppercase tracking-tighter">System Configuration</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="dashboard-card space-y-6">
+                            <h4 class="text-sm font-black uppercase text-emerald-500">Company Identity</h4>
+                            <div id="company-info" class="space-y-4 text-sm text-white/60">
+                                <!-- Company info injected here -->
+                            </div>
+                        </div>
+                        <div class="dashboard-card space-y-6">
+                            <h4 class="text-sm font-black uppercase text-emerald-500">Branch Matrix</h4>
+                            <div id="branch-list" class="space-y-4">
+                                <!-- Branch list injected here -->
+                            </div>
                         </div>
                     </div>
                 </div>

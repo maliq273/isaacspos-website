@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Login — IsaacsPOS</title>
+    <title>Enterprise Login V2.1.1 — IsaacsPOS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-black text-white selection:bg-emerald-500 selection:text-black">
+    <div class="fixed top-6 right-6 z-[100] flex items-center gap-3 px-4 py-2 glass rounded-full border-emerald-500/20">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-[9px] font-black uppercase tracking-widest text-emerald-500">System Online</span>
+    </div>
     <div class="min-h-screen flex items-center justify-center p-6 industrial-grid">
         <div class="auth-card w-full max-w-md reveal">
             <div class="mb-12 text-center">
@@ -56,15 +60,30 @@
     </div>
 
     <script>
-        const supabase = window.supabase.createClient(
-          "https://pespysgaqfstachvnsvr.supabase.co", 
-          "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
-        );
+        console.log("[IsaacsPOS] Login Protocol Initialized");
+        
+        if (!window.supabase) {
+            console.error("[IsaacsPOS] Critical Error: Supabase SDK not detected.");
+            alert("System Error: Security SDK failed to load. Please refresh.");
+        }
+        
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(
+              "https://pespysgaqfstachvnsvr.supabase.co", 
+              "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
+            );
+            console.log("[IsaacsPOS] Supabase Client Created Successfully");
+        } catch (err) {
+            console.error("[IsaacsPOS] Supabase Initialization Failed:", err);
+            alert("Connection Error: Failed to initialize security protocol.");
+        }
 
         lucide.createIcons();
 
         document.getElementById('login-form').onsubmit = async (e) => {
             e.preventDefault();
+            console.log("[IsaacsPOS] Attempting Uplink...");
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const submitBtn = document.getElementById('submit-btn');
@@ -81,7 +100,12 @@
             });
 
             if (error) {
-                errorMessage.textContent = error.message;
+                // Map common errors to industrial phrasing
+                let friendlyError = error.message;
+                if (error.status === 400) friendlyError = "Invalid Access Credentials. Uplink Rejected.";
+                if (error.status === 422) friendlyError = "Protocol Error: Malformed Identity String.";
+                
+                errorMessage.textContent = friendlyError;
                 errorDiv.classList.remove('hidden');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = 'Initiate Uplink <i data-lucide="arrow-right" class="w-4 h-4"></i>';

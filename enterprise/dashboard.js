@@ -8,10 +8,10 @@ const supabase = window.supabase.createClient(
 // APP STATE
 const appState = {
     user: null,
-    companyId: localStorage.getItem("company_id"),
-    company: { name: localStorage.getItem("company_name") || "Loading...", id: null },
+    companyId: null,
+    company: { name: "Loading...", id: null },
     branches: [],
-    selectedBranch: localStorage.getItem("branch_id") || 'all',
+    selectedBranch: 'all',
     dateRange: 30, // days
     customStart: null,
     customEnd: null,
@@ -23,61 +23,54 @@ const appState = {
  * INITIALIZATION CYCLE
  */
 async function init() {
-    // Immediate UI Feedback
-    document.getElementById('sidebar-company-name').textContent = appState.company.name;
+    // 1. Recover Session State
+    appState.companyId = localStorage.getItem("company_id");
+    appState.company.name = localStorage.getItem("company_name") || "Isaacs Strategic Group";
+    appState.selectedBranch = localStorage.getItem("branch_id") || 'all';
 
+    // 2. Auth Check
     const { data: { session } } = await supabase.auth.getSession();
+    
+    // Safety: If no session OR no company ID, we cannot proceed
     if (!session || !appState.companyId) {
-        console.error("No active session or company ID. Redirecting to login.");
+        console.error("Session invalid or Context missing. Resetting Uplink.");
+        localStorage.clear();
         window.location.href = "index.html";
         return;
     }
     
     appState.user = session.user;
     document.getElementById('user-email-sidebar').textContent = appState.user.email;
+    document.getElementById('sidebar-company-name').textContent = appState.company.name;
 
-    // Phase 1: Refresh Identity & Branch Mesh
-    await refreshCompanyIdentity();
+    // 3. Populate Infrastructure
     await fetchBranchNetwork();
     
-    // Phase 2: System Wiring
+    // 4. Bind System Events
     setupEventListeners();
     
-    // Phase 3: Initial Data Pull
+    // 5. Initial Data Rendering
     refreshUI();
     
     if (window.lucide) lucide.createIcons();
 }
 
 /**
- * IDENTITY HANDSHAKE
+ * INFRASTRUCTURE: BRANCH MESH
  */
-async function refreshCompanyIdentity() {
-    const { data, error } = await supabase
-        .from('profiles')
-        .select('company_name')
-        .eq('id', appState.user.id)
-        .single();
-    
-    if (!error && data && data.company_name) {
-        appState.company.name = data.company_name;
-        localStorage.setItem("company_name", data.company_name);
-        document.getElementById('sidebar-company-name').textContent = data.company_name;
-    }
-}
-
 async function fetchBranchNetwork() {
-    // 1️⃣ Get all branches for this company
+    // Attempt to pull real branch data for this company
     const { data: branches, error } = await supabase
         .from("branches")
         .select("*")
         .eq("company_id", appState.companyId);
 
     if (error || !branches || branches.length === 0) {
-        console.warn("Using simulated nodes for current company context.");
+        console.warn("Using simulated network nodes for current company context.");
         appState.branches = [
-            { id: 'br-hq', name: 'Isaacs HQ (Cape Town)', company_id: appState.companyId },
-            { id: 'br-st', name: 'Isaacs Stellenbosch', company_id: appState.companyId }
+            { id: 'br-hq', name: 'Isaacs HQ (Cape Town)', inventory_value: 85000, company_id: appState.companyId },
+            { id: 'br-st', name: 'Isaacs Stellenbosch', inventory_value: 42000, company_id: appState.companyId },
+            { id: 'br-cl', name: 'Isaacs Claremont', inventory_value: 31000, company_id: appState.companyId }
         ];
     } else {
         appState.branches = branches;
@@ -97,62 +90,43 @@ async function fetchBranchNetwork() {
 }
 
 /**
- * CORE DATA ENGINE (User logic requested)
+ * DATA ANALYSIS ENGINE
  */
 async function loadPerformanceData() {
     const { startDate, endDate } = getDateBounds();
 
-    // 1️⃣ Get Branch Scope
-    let targetBranchIds = [];
-    if (appState.selectedBranch === 'all') {
-        targetBranchIds = appState.branches.map(b => b.id);
-    } else {
-        targetBranchIds = [appState.selectedBranch];
-    }
+    // Determine Branch Context
+    let targetBranchIds = appState.selectedBranch === 'all' 
+        ? appState.branches.map(b => b.id) 
+        : [appState.selectedBranch];
 
-    // 2️⃣ Get all sales for those branches within range
-    let salesQuery = supabase
-        .from("sales")
-        .select("*")
-        .in("branch_id", targetBranchIds)
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString());
+    // Parallel Queries for speed
+    const [salesRes, productsRes] = await Promise.all([
+        supabase.from("sales").select("*")
+            .in("branch_id", targetBranchIds)
+            .gte("created_at", startDate.toISOString())
+            .lte("created_at", endDate.toISOString()),
+        supabase.from("products").select("id").in("branch_id", targetBranchIds)
+    ]);
 
-    // 3️⃣ Get Inventory count
-    let productsQuery = supabase
-        .from("products")
-        .select("id")
-        .in("branch_id", targetBranchIds);
+    // Data Processing & Aggregation
+    const sales = salesRes.data || generateMockSales(startDate, endDate);
+    const productsCount = (productsRes.data?.length) || 125;
 
-    const [salesRes, productsRes] = await Promise.all([salesQuery, productsQuery]);
-
-    // Handle missing tables/empty results gracefully for the UI
-    let sales = salesRes.data || generateMockSales(startDate, endDate);
-    let products = productsRes.data || Array(125).fill({});
-
-    // 4️⃣ Aggregations
-    const grossRevenue = sales.reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
-    const totalTips = sales.reduce((sum, sale) => sum + (sale.tip_amount || 0), 0);
+    const grossRevenue = sales.reduce((sum, s) => sum + (s.total_amount || 0), 0);
+    const totalTips = sales.reduce((sum, s) => sum + (s.tip_amount || 0), 0);
     
-    // Today's velocity
     const todayStr = new Date().toISOString().split("T")[0];
-    const dailyAverageValue = sales.filter(s => s.created_at.startsWith(todayStr))
-                                .reduce((sum, s) => sum + (s.total_amount || 0), 0);
+    const dailyAverage = sales.filter(s => s.created_at.startsWith(todayStr))
+                             .reduce((sum, s) => sum + (s.total_amount || 0), 0);
 
-    const revenueVelocityValue = grossRevenue / 30; // 30-day projection
+    const revenueVelocity = grossRevenue / 30;
 
-    return { 
-        grossRevenue, 
-        totalTips, 
-        inventoryCount: products.length, 
-        dailyAverage: dailyAverageValue, 
-        revenueVelocity: revenueVelocityValue,
-        allSales: sales
-    };
+    return { grossRevenue, totalTips, inventoryCount: productsCount, dailyAverage, revenueVelocity, allSales: sales };
 }
 
 /**
- * UI RE-RENDER ENGINE
+ * UI SYNC ENGINE
  */
 async function refreshUI() {
     const pulse = document.getElementById('sync-pulse');
@@ -160,48 +134,44 @@ async function refreshUI() {
 
     const stats = await loadPerformanceData();
 
-    // Bind requested IDs
+    // DOM Binding
     document.getElementById("grossRevenue").innerText = "R " + stats.grossRevenue.toFixed(2);
     document.getElementById("totalTips").innerText = "R " + stats.totalTips.toFixed(2);
     document.getElementById("inventoryCount").innerText = stats.inventoryCount;
     document.getElementById("dailyAverage").innerText = "R " + stats.dailyAverage.toFixed(2);
     document.getElementById("revenueVelocity").innerText = "R " + stats.revenueVelocity.toFixed(2) + " / Cycle";
 
-    // View Routing
-    if (appState.currentView === 'performance') {
-        renderVelocityChart(stats.allSales);
-    } else if (appState.currentView === 'journal') {
-        renderSalesJournal(stats.allSales);
-    } else if (appState.currentView === 'team') {
-        renderTeamPerformance(stats.allSales);
-    }
+    // View Dissemination
+    if (appState.currentView === 'performance') renderVelocityChart(stats.allSales);
+    else if (appState.currentView === 'journal') renderSalesJournal(stats.allSales);
+    else if (appState.currentView === 'team') renderTeamStats(stats.allSales);
 
     if (pulse) pulse.classList.remove('animate-ping');
     if (window.lucide) lucide.createIcons();
 }
 
 /**
- * CHART RENDERING
+ * VISUALIZATIONS
  */
 function renderVelocityChart(sales) {
     const ctx = document.getElementById('velocityChart').getContext('2d');
     if (appState.chart) appState.chart.destroy();
 
-    const dailyMap = {};
+    const dailyData = {};
     sales.forEach(s => {
         const d = s.created_at.split('T')[0];
-        dailyMap[d] = (dailyMap[d] || 0) + (s.total_amount || 0);
+        dailyData[d] = (dailyData[d] || 0) + (s.total_amount || 0);
     });
 
-    const labels = Object.keys(dailyMap).sort();
-    const values = labels.map(l => dailyMap[l]);
+    const labels = Object.keys(dailyData).sort();
+    const values = labels.map(l => dailyData[l]);
 
     appState.chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels,
             datasets: [{
-                label: 'Gross Sales',
+                label: 'Revenue Flow',
                 data: values,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -224,9 +194,6 @@ function renderVelocityChart(sales) {
     });
 }
 
-/**
- * VIEW-SPECIFIC RENDERERS
- */
 function renderSalesJournal(sales) {
     const body = document.getElementById('journal-body');
     body.innerHTML = '';
@@ -235,8 +202,8 @@ function renderSalesJournal(sales) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td class="p-8 font-bold opacity-40">${new Date(s.created_at).toLocaleDateString()}</td>
-            <td class="p-8 font-black">${s.folio_number || 'INV-'+Math.floor(Math.random()*9999)}</td>
-            <td class="p-8 opacity-70">${s.staff_name || 'System User'}</td>
+            <td class="p-8 font-black">${s.folio_number || 'INV-'+Math.floor(Math.random()*9000+1000)}</td>
+            <td class="p-8 opacity-70">${s.staff_name || 'System Operator'}</td>
             <td class="p-8 text-right font-black">R${(s.total_amount || 0).toFixed(2)}</td>
             <td class="p-8"><span class="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase font-black">${s.payment_type || 'Card'}</span></td>
             <td class="p-8 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">${branch ? branch.name : 'Master Node'}</td>
@@ -245,19 +212,19 @@ function renderSalesJournal(sales) {
     });
 }
 
-function renderTeamPerformance(sales) {
+function renderTeamStats(sales) {
     const container = document.getElementById('team-stats-container');
     container.innerHTML = '';
-    const map = {};
+    const stats = {};
     sales.forEach(s => {
-        const name = s.staff_name || 'System User';
-        if (!map[name]) map[name] = { sales: 0, visits: 0, tips: 0 };
-        map[name].sales += (s.total_amount || 0);
-        map[name].visits += 1;
-        map[name].tips += (s.tip_amount || 0);
+        const name = s.staff_name || 'System Operator';
+        if (!stats[name]) stats[name] = { sales: 0, visits: 0, tips: 0 };
+        stats[name].sales += (s.total_amount || 0);
+        stats[name].visits += 1;
+        stats[name].tips += (s.tip_amount || 0);
     });
 
-    Object.entries(map).forEach(([name, data]) => {
+    Object.entries(stats).forEach(([name, data]) => {
         const card = document.createElement('div');
         card.className = "stat-card group hover:border-emerald-500/30";
         card.innerHTML = `
@@ -276,7 +243,7 @@ function renderTeamPerformance(sales) {
 }
 
 /**
- * UTILS
+ * UTILITIES & LISTENERS
  */
 function getDateBounds() {
     let start, end;
@@ -292,7 +259,7 @@ function getDateBounds() {
 }
 
 function setupEventListeners() {
-    // Navigation
+    // Navigation Routing
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.onclick = () => {
             const view = btn.getAttribute('data-view');
@@ -308,13 +275,14 @@ function setupEventListeners() {
         };
     });
 
-    // Filtering
+    // Branch Filter
     document.getElementById('branch-selector').onchange = (e) => {
         appState.selectedBranch = e.target.value;
         localStorage.setItem("branch_id", e.target.value);
         refreshUI();
     };
 
+    // Date Presets
     document.querySelectorAll('.date-filter-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active-filter'));
@@ -330,9 +298,7 @@ function setupEventListeners() {
         document.getElementById('custom-date-range').classList.toggle('hidden');
     };
 
-    // Mobile
-    document.getElementById('open-mobile-btn').onclick = () => document.getElementById('mobile-nav').classList.add('open');
-    document.getElementById('close-mobile-btn').onclick = closeMobileNav;
+    // Logout Routine
     document.getElementById('logout-btn').onclick = async () => {
         localStorage.clear();
         await supabase.auth.signOut();
@@ -343,26 +309,26 @@ function setupEventListeners() {
 function closeMobileNav() { document.getElementById('mobile-nav').classList.remove('open'); }
 
 /**
- * MOCK DATA (Safety Fallback)
+ * SAFETY MOCK DATA
  */
 function generateMockSales(start, end) {
-    const list = [];
+    const data = [];
+    const staff = ['David Director', 'Sarah Stylist', 'Emma Junior'];
     let curr = new Date(start);
     while (curr <= end) {
-        const count = 10 + Math.floor(Math.random() * 10);
+        const count = 15;
         for(let i=0; i<count; i++) {
-            list.push({
+            data.push({
                 created_at: curr.toISOString(),
-                total_amount: 400 + Math.random() * 800,
-                tip_amount: 40 + Math.random() * 100,
+                total_amount: 500 + Math.random() * 500,
+                tip_amount: 50 + Math.random() * 50,
                 branch_id: appState.branches[Math.floor(Math.random() * appState.branches.length)]?.id,
-                payment_type: 'Card',
-                staff_name: 'David Director'
+                staff_name: staff[Math.floor(Math.random() * staff.length)]
             });
         }
         curr.setDate(curr.getDate() + 1);
     }
-    return list;
+    return data;
 }
 
 document.addEventListener('DOMContentLoaded', init);

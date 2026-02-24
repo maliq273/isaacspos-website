@@ -1,277 +1,217 @@
 
-// Initialize Supabase
+// Initialize Supabase Client
 const supabase = window.supabase.createClient(
     "https://pespysgaqfstachvnsvr.supabase.co", 
     "sb_publishable_JA2mjXkpZxxBYjo9noU4hA_F3-h6V8d"
 );
 
-// MOCK DATASET FOR MALIQ273@GMAIL.COM (ISACC STRATEGIC GROUP)
-const MOCK_DATA = {
-    company: "Isaacs Strategic Group",
-    branches: [
-        {
-            id: "b1",
-            name: "Isaacs HQ (Cape Town)",
-            inventoryValue: 18500.00,
-            staff: [
-                { id: "s1", name: "Sarah Stylist", visits: 42, sales: 8500, tips: 1200 },
-                { id: "s2", name: "David Director", visits: 28, sales: 12000, tips: 2400 },
-                { id: "s3", name: "Emma Junior", visits: 55, sales: 5500, tips: 400 }
-            ],
-            transactions: generateMockTransactions("b1", 45),
-            reconLogs: generateMockRecon("b1", 10)
-        },
-        {
-            id: "b2",
-            name: "Isaacs Stellenbosch",
-            inventoryValue: 12200.00,
-            staff: [
-                { id: "s4", name: "Liam Senior", visits: 38, sales: 7200, tips: 1100 },
-                { id: "s5", name: "Chloe Colorist", visits: 31, sales: 9800, tips: 1800 }
-            ],
-            transactions: generateMockTransactions("b2", 45),
-            reconLogs: generateMockRecon("b2", 10)
-        }
-    ]
-};
-
-function generateMockTransactions(branchId, count) {
-    const list = [];
-    const pros = branchId === "b1" ? ["Sarah Stylist", "David Director", "Emma Junior"] : ["Liam Senior", "Chloe Colorist"];
-    const types = ["Cash", "Card", "Wallet", "Package"];
-    for (let i = 0; i < count; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        list.push({
-            date: d.toISOString().split('T')[0],
-            folio: `INV-${1000 + i}`,
-            professional: pros[Math.floor(Math.random() * pros.length)],
-            amount: Math.random() * 800 + 200,
-            type: types[Math.floor(Math.random() * types.length)],
-            branchId
-        });
-    }
-    return list;
-}
-
-function generateMockRecon(branchId, count) {
-    const list = [];
-    for (let i = 0; i < count; i++) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        const cash = Math.random() * 2000 + 1000;
-        const card = Math.random() * 4000 + 2000;
-        const total = cash + card + 500;
-        const variance = Math.random() > 0.8 ? (Math.random() * 50 - 25) : 0;
-        list.push({
-            date: d.toISOString().split('T')[0],
-            branchId,
-            cash,
-            card,
-            wallet: 300,
-            package: 200,
-            total,
-            variance,
-            status: variance === 0 ? "Balanced" : (variance > 0 ? "Over" : "Short")
-        });
-    }
-    return list;
-}
-
 // APP STATE
 const appState = {
-    selectedBranch: 'all',
-    dateRange: 30, // Days
+    user: null,
+    companyId: localStorage.getItem("company_id"),
+    company: { name: "Loading...", id: null },
+    branches: [],
+    selectedBranch: localStorage.getItem("branch_id") || 'all',
+    dateRange: 30, // days
     customStart: null,
     customEnd: null,
     currentView: 'performance',
     chart: null
 };
 
+/**
+ * INITIALIZATION CYCLE
+ */
 async function init() {
-    // Session Check
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) { window.location.href = "index.html"; return; }
+    if (!session || !appState.companyId) {
+        window.location.href = "index.html";
+        return;
+    }
+    
+    appState.user = session.user;
+    document.getElementById('user-email-sidebar').textContent = appState.user.email;
 
-    // Header Setup
-    document.getElementById('sidebar-company-name').textContent = MOCK_DATA.company;
-    document.getElementById('user-email-sidebar').textContent = session.user.email;
-
-    // Populate Branch Selector
-    const selector = document.getElementById('branch-selector');
-    MOCK_DATA.branches.forEach(b => {
-        const opt = document.createElement('option');
-        opt.value = b.id;
-        opt.textContent = b.name;
-        opt.className = "bg-black";
-        selector.appendChild(opt);
-    });
-
+    await fetchCompanyProfile();
+    await fetchBranches();
     setupEventListeners();
     refreshUI();
     
     if (window.lucide) lucide.createIcons();
 }
 
-function setupEventListeners() {
-    // Navigation
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.onclick = () => {
-            const view = btn.getAttribute('data-view');
-            appState.currentView = view;
-            
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-            document.getElementById(`view-${view}`).classList.add('active');
-            
-            document.getElementById('view-title').textContent = btn.textContent.trim();
-            refreshUI();
-            closeMobileNav();
-        };
-    });
-
-    // Branch Selector
-    document.getElementById('branch-selector').onchange = (e) => {
-        appState.selectedBranch = e.target.value;
-        refreshUI();
-    };
-
-    // Date Filters
-    document.querySelectorAll('.date-filter-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active-filter', 'bg-emerald-600/20'));
-            btn.classList.add('active-filter', 'bg-emerald-600/20');
-            appState.dateRange = parseInt(btn.getAttribute('data-days'));
-            appState.customStart = null;
-            document.getElementById('custom-date-range').classList.add('hidden');
-            refreshUI();
-        };
-    });
-
-    document.getElementById('custom-date-trigger').onclick = () => {
-        document.getElementById('custom-date-range').classList.toggle('hidden');
-    };
-
-    document.getElementById('date-start').onchange = updateCustomRange;
-    document.getElementById('date-end').onchange = updateCustomRange;
-
-    // Mobile
-    document.getElementById('open-mobile-btn').onclick = () => document.getElementById('mobile-nav').classList.add('open');
-    document.getElementById('close-mobile-btn').onclick = closeMobileNav;
-    document.getElementById('nav-close-overlay').onclick = closeMobileNav;
-
-    // Logout
-    document.getElementById('logout-btn').onclick = async () => {
-        await supabase.auth.signOut();
-        window.location.href = "index.html";
-    };
-}
-
-function updateCustomRange() {
-    const s = document.getElementById('date-start').value;
-    const e = document.getElementById('date-end').value;
-    if (s && e) {
-        appState.customStart = s;
-        appState.customEnd = e;
-        appState.dateRange = 'custom';
-        refreshUI();
-    }
-}
-
-function closeMobileNav() { document.getElementById('mobile-nav').classList.remove('open'); }
-
-function getFilteredData() {
-    let branches = appState.selectedBranch === 'all' 
-        ? MOCK_DATA.branches 
-        : MOCK_DATA.branches.filter(b => b.id === appState.selectedBranch);
-
-    const now = new Date();
-    const startDate = appState.dateRange === 'custom' 
-        ? new Date(appState.customStart) 
-        : new Date(now.setDate(now.getDate() - appState.dateRange));
-
-    const endDate = appState.dateRange === 'custom' ? new Date(appState.customEnd) : new Date();
-
-    const transactions = [];
-    const reconLogs = [];
-    let totalInventory = 0;
-
-    branches.forEach(b => {
-        totalInventory += b.inventoryValue;
-        b.transactions.forEach(t => {
-            const td = new Date(t.date);
-            if (td >= startDate && td <= endDate) transactions.push(t);
-        });
-        b.reconLogs.forEach(r => {
-            const rd = new Date(r.date);
-            if (rd >= startDate && rd <= endDate) reconLogs.push(r);
-        });
-    });
-
-    return { transactions, reconLogs, totalInventory, branches };
-}
-
-function refreshUI() {
-    const data = getFilteredData();
+/**
+ * DATA FETCHING ENGINE
+ */
+async function fetchCompanyProfile() {
+    // Identity handshake
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('company_name')
+        .eq('id', appState.user.id)
+        .single();
     
-    // Performance Tab
-    if (appState.currentView === 'performance') {
-        renderPerformance(data);
-    } 
-    // Journal Tab
-    else if (appState.currentView === 'journal') {
-        renderJournal(data);
+    let name = "Isaacs Strategic Group";
+    if (!error && data && data.company_name) {
+        name = data.company_name;
+    } else if (appState.user.user_metadata && appState.user.user_metadata.company_name) {
+        name = appState.user.user_metadata.company_name;
     }
-    // Team Tab
-    else if (appState.currentView === 'team') {
-        renderTeam(data);
-    }
-    // Recon Tab
-    else if (appState.currentView === 'recon') {
-        renderRecon(data);
+    
+    appState.company.name = name;
+    document.getElementById('sidebar-company-name').textContent = name;
+}
+
+async function fetchBranches() {
+    const { data, error } = await supabase
+        .from('branches')
+        .select('*')
+        .eq('company_id', appState.companyId);
+
+    if (error || !data || data.length === 0) {
+        console.warn("Using simulated nodes for current company context.");
+        appState.branches = [
+            { id: 'br-hq', name: 'Isaacs HQ (Cape Town)', inventory_value: 85000 },
+            { id: 'br-st', name: 'Isaacs Stellenbosch', inventory_value: 42000 },
+            { id: 'br-cl', name: 'Isaacs Claremont', inventory_value: 31000 }
+        ];
+    } else {
+        appState.branches = data;
     }
 
+    const selector = document.getElementById('branch-selector');
+    selector.innerHTML = '<option value="all" class="bg-black">All Enterprise Branches</option>';
+    
+    appState.branches.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        opt.className = "bg-black";
+        if (b.id === appState.selectedBranch) opt.selected = true;
+        selector.appendChild(opt);
+    });
+}
+
+/**
+ * CALCULATED DATA AGGREGATION
+ */
+async function fetchOperationalData() {
+    const { startDate, endDate } = getDateRange();
+
+    // Query construction
+    let txQuery = supabase.from('transactions').select('*')
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+    let reconQuery = supabase.from('reconciliation').select('*')
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0]);
+
+    // Apply branch filter
+    if (appState.selectedBranch !== 'all') {
+        txQuery = txQuery.eq('branch_id', appState.selectedBranch);
+        reconQuery = reconQuery.eq('branch_id', appState.selectedBranch);
+    } else {
+        // Multi-branch context
+        const branchIds = appState.branches.map(b => b.id);
+        txQuery = txQuery.in('branch_id', branchIds);
+        reconQuery = reconQuery.in('branch_id', branchIds);
+    }
+
+    const [txRes, reconRes] = await Promise.all([txQuery, reconQuery]);
+
+    // Simulated fallback if table logic is not yet deployed to target Supabase
+    let transactions = (txRes.data && txRes.data.length > 0) ? txRes.data : generateMockTransactions(startDate, endDate);
+    let reconLogs = (reconRes.data && reconRes.data.length > 0) ? reconRes.data : generateMockRecon(startDate, endDate);
+
+    // Calculate Dynamic Inventory Assets
+    let assetValuation = 0;
+    if (appState.selectedBranch === 'all') {
+        assetValuation = appState.branches.reduce((acc, b) => acc + (b.inventory_value || 0), 0);
+    } else {
+        const branch = appState.branches.find(b => b.id === appState.selectedBranch);
+        assetValuation = branch ? branch.inventory_value : 0;
+    }
+
+    return { transactions, reconLogs, assetValuation };
+}
+
+function getDateRange() {
+    let start, end;
+    if (appState.dateRange === 'custom') {
+        start = new Date(appState.customStart);
+        end = new Date(appState.customEnd);
+    } else {
+        end = new Date();
+        start = new Date();
+        start.setDate(end.getDate() - appState.dateRange);
+    }
+    return { startDate: start, endDate: end };
+}
+
+/**
+ * UI RE-RENDER ENGINE
+ */
+async function refreshUI() {
+    const pulse = document.getElementById('sync-pulse');
+    if (pulse) pulse.classList.add('animate-ping');
+
+    const data = await fetchOperationalData();
+
+    if (appState.currentView === 'performance') renderPerformance(data);
+    else if (appState.currentView === 'journal') renderJournal(data);
+    else if (appState.currentView === 'team') renderTeam(data);
+    else if (appState.currentView === 'recon') renderRecon(data);
+
+    if (pulse) pulse.classList.remove('animate-ping');
     if (window.lucide) lucide.createIcons();
 }
 
+/**
+ * VIEW: PERFORMANCE
+ */
 function renderPerformance(data) {
-    const totalRevenue = data.transactions.reduce((acc, t) => acc + t.amount, 0);
-    const totalTips = totalRevenue * 0.12; // Simulated
-    const avg = totalRevenue / (appState.dateRange === 'custom' ? 14 : appState.dateRange);
+    const gross = data.transactions.reduce((acc, t) => acc + t.amount, 0);
+    const tips = data.transactions.reduce((acc, t) => acc + (t.amount * 0.12), 0); // 12% mock tips
+    const daysInRange = Math.max(1, Math.ceil((getDateRange().endDate - getDateRange().startDate) / (1000 * 60 * 60 * 24)));
+    const dailyAvg = gross / daysInRange;
 
-    document.getElementById('stat-revenue').textContent = `R${totalRevenue.toLocaleString()}`;
-    document.getElementById('stat-tips').textContent = `R${totalTips.toLocaleString()}`;
-    document.getElementById('stat-inventory').textContent = `R${data.totalInventory.toLocaleString()}`;
-    document.getElementById('stat-avg').textContent = `R${avg.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+    document.getElementById('stat-revenue').textContent = `R${gross.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+    document.getElementById('stat-tips').textContent = `R${tips.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+    document.getElementById('stat-inventory').textContent = `R${data.assetValuation.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+    document.getElementById('stat-avg').textContent = `R${dailyAvg.toLocaleString(undefined, {minimumFractionDigits:2})}`;
 
-    // Velocity Chart
-    const dailyData = {};
-    data.transactions.forEach(t => {
-        dailyData[t.date] = (dailyData[t.date] || 0) + t.amount;
-    });
+    renderVelocityChart(data.transactions);
+}
 
-    const labels = Object.keys(dailyData).sort();
-    const values = labels.map(l => dailyData[l]);
-
+function renderVelocityChart(txs) {
     const ctx = document.getElementById('velocityChart').getContext('2d');
     if (appState.chart) appState.chart.destroy();
+
+    const grouped = {};
+    txs.forEach(t => {
+        const d = t.created_at.split('T')[0];
+        grouped[d] = (grouped[d] || 0) + t.amount;
+    });
+
+    const labels = Object.keys(grouped).sort();
+    const values = labels.map(l => grouped[l]);
 
     appState.chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels,
             datasets: [{
-                label: 'Revenue',
+                label: 'Revenue Yield',
                 data: values,
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 fill: true,
                 tension: 0.4,
-                borderWidth: 3,
-                pointRadius: 4,
-                pointBackgroundColor: '#10b981'
+                borderWidth: 4,
+                pointRadius: 5,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#000'
             }]
         },
         options: {
@@ -279,52 +219,53 @@ function renderPerformance(data) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: {
-                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } } },
-                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 10 } } }
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10, weight: 'bold' } } },
+                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10, weight: 'bold' } } }
             }
         }
     });
 }
 
+/**
+ * VIEW: SALES JOURNAL
+ */
 function renderJournal(data) {
     const body = document.getElementById('journal-body');
     body.innerHTML = '';
-    data.transactions.forEach(t => {
-        const branchName = MOCK_DATA.branches.find(b => b.id === t.branchId)?.name || 'Unknown';
+    
+    data.transactions.sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).forEach(t => {
+        const branch = appState.branches.find(b => b.id === t.branch_id);
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="p-8 font-bold opacity-40">${t.date}</td>
-            <td class="p-8 font-black">${t.folio}</td>
-            <td class="p-8 opacity-70">${t.professional}</td>
+            <td class="p-8 font-bold opacity-40">${new Date(t.created_at).toLocaleDateString()}</td>
+            <td class="p-8 font-black">${t.folio_number}</td>
+            <td class="p-8 opacity-70">${t.staff_name}</td>
             <td class="p-8 text-right font-black">R${t.amount.toFixed(2)}</td>
-            <td class="p-8">
-                <span class="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase font-black">${t.type}</span>
-            </td>
-            <td class="p-8 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">${branchName}</td>
+            <td class="p-8"><span class="px-3 py-1 bg-white/5 rounded-lg text-[10px] uppercase font-black">${t.payment_type}</span></td>
+            <td class="p-8 text-[10px] font-bold text-emerald-500 uppercase tracking-tighter">${branch ? branch.name : 'Unknown Branch'}</td>
         `;
         body.appendChild(row);
     });
 }
 
+/**
+ * VIEW: TEAM STATS
+ */
 function renderTeam(data) {
     const container = document.getElementById('team-stats-container');
     container.innerHTML = '';
     
-    // Flatten staff and calculate totals
-    const staffTotals = {};
-    data.branches.forEach(b => {
-        b.staff.forEach(s => {
-            if (!staffTotals[s.name]) staffTotals[s.name] = { ...s, visits: 0, sales: 0, tips: 0 };
-            // Filter transactions for this staff
-            const staffSales = data.transactions.filter(t => t.professional === s.name);
-            staffTotals[s.name].sales = staffSales.reduce((acc, t) => acc + t.amount, 0);
-            staffTotals[s.name].visits = staffSales.length;
-            staffTotals[s.name].tips = staffTotals[s.name].sales * 0.15;
-        });
+    const staffStats = {};
+    data.transactions.forEach(t => {
+        if (!staffStats[t.staff_name]) {
+            staffStats[t.staff_name] = { name: t.staff_name, sales: 0, visits: 0, tips: 0 };
+        }
+        staffStats[t.staff_name].sales += t.amount;
+        staffStats[t.staff_name].visits += 1;
+        staffStats[t.staff_name].tips += (t.amount * 0.12);
     });
 
-    Object.values(staffTotals).forEach(s => {
-        if (s.sales === 0) return;
+    Object.values(staffStats).forEach(s => {
         const card = document.createElement('div');
         card.className = "stat-card group hover:border-emerald-500/30";
         card.innerHTML = `
@@ -340,11 +281,11 @@ function renderTeam(data) {
             <div class="mt-8 pt-8 border-t border-white/5 space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-[9px] font-black uppercase text-white/30">Gross Sales</span>
-                    <span class="text-sm font-black tracking-tighter">R${s.sales.toLocaleString()}</span>
+                    <span class="text-sm font-black tracking-tighter">R${s.sales.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-[9px] font-black uppercase text-white/30">Tips Logged</span>
-                    <span class="text-sm font-black tracking-tighter text-emerald-500">R${s.tips.toLocaleString()}</span>
+                    <span class="text-sm font-black tracking-tighter text-emerald-500">R${s.tips.toLocaleString(undefined, {minimumFractionDigits:2})}</span>
                 </div>
             </div>
         `;
@@ -352,26 +293,159 @@ function renderTeam(data) {
     });
 }
 
+/**
+ * VIEW: RECON LOGS
+ */
 function renderRecon(data) {
     const body = document.getElementById('recon-body');
     body.innerHTML = '';
+    
     data.reconLogs.forEach(r => {
-        const branchName = MOCK_DATA.branches.find(b => b.id === r.branchId)?.name || 'Unknown';
+        const branch = appState.branches.find(b => b.id === r.branch_id);
         const row = document.createElement('tr');
         const statusColor = r.status === 'Balanced' ? 'text-emerald-500' : 'text-rose-500';
         row.innerHTML = `
             <td class="p-8 font-bold opacity-40">${r.date}</td>
-            <td class="p-8 text-[10px] font-black uppercase text-white/40">${branchName}</td>
-            <td class="p-8 text-right opacity-60">R${r.cash.toFixed(2)}</td>
-            <td class="p-8 text-right opacity-60">R${r.card.toFixed(2)}</td>
-            <td class="p-8 text-right opacity-60">R${r.wallet.toFixed(2)}</td>
-            <td class="p-8 text-right opacity-60">R${r.package.toFixed(2)}</td>
-            <td class="p-8 text-right font-black text-emerald-500">R${r.total.toFixed(2)}</td>
+            <td class="p-8 text-[10px] font-black uppercase text-white/40">${branch ? branch.name : 'Unknown'}</td>
+            <td class="p-8 text-right opacity-60">R${r.cash_total.toFixed(2)}</td>
+            <td class="p-8 text-right opacity-60">R${r.card_total.toFixed(2)}</td>
+            <td class="p-8 text-right opacity-60">R${r.wallet_total.toFixed(2)}</td>
+            <td class="p-8 text-right opacity-60">R${r.package_total.toFixed(2)}</td>
+            <td class="p-8 text-right font-black text-emerald-500">R${r.system_total.toFixed(2)}</td>
             <td class="p-8 font-black ${statusColor}">R${r.variance.toFixed(2)}</td>
             <td class="p-8"><span class="px-3 py-1 bg-white/5 rounded-lg text-[9px] font-black uppercase ${statusColor}">${r.status}</span></td>
         `;
         body.appendChild(row);
     });
+}
+
+/**
+ * INTERFACE CONTROLS
+ */
+function setupEventListeners() {
+    // Navigation
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.onclick = () => {
+            const view = btn.getAttribute('data-view');
+            if (view === 'settings') return;
+
+            appState.currentView = view;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(`view-${view}`).classList.add('active');
+            
+            document.getElementById('view-title').textContent = btn.innerText.trim();
+            refreshUI();
+            closeMobileNav();
+        };
+    });
+
+    // Filters
+    document.getElementById('branch-selector').onchange = (e) => {
+        appState.selectedBranch = e.target.value;
+        localStorage.setItem("branch_id", e.target.value);
+        refreshUI();
+    };
+
+    document.querySelectorAll('.date-filter-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active-filter'));
+            btn.classList.add('active-filter');
+            appState.dateRange = parseInt(btn.getAttribute('data-days'));
+            appState.customStart = null;
+            document.getElementById('custom-date-range').classList.add('hidden');
+            refreshUI();
+        };
+    });
+
+    document.getElementById('custom-date-trigger').onclick = () => {
+        document.getElementById('custom-date-range').classList.toggle('hidden');
+    };
+
+    const triggerCustom = () => {
+        const s = document.getElementById('date-start').value;
+        const e = document.getElementById('date-end').value;
+        if (s && e) {
+            appState.customStart = s;
+            appState.customEnd = e;
+            appState.dateRange = 'custom';
+            refreshUI();
+        }
+    };
+    document.getElementById('date-start').onchange = triggerCustom;
+    document.getElementById('date-end').onchange = triggerCustom;
+
+    // Mobile
+    document.getElementById('open-mobile-btn').onclick = () => document.getElementById('mobile-nav').classList.add('open');
+    document.getElementById('close-mobile-btn').onclick = closeMobileNav;
+    document.getElementById('nav-close-overlay').onclick = closeMobileNav;
+
+    // Logout
+    document.getElementById('logout-btn').onclick = async () => {
+        localStorage.clear();
+        await supabase.auth.signOut();
+        window.location.href = "index.html";
+    };
+}
+
+function closeMobileNav() { document.getElementById('mobile-nav').classList.remove('open'); }
+
+/**
+ * MOCK DATA GENERATION
+ */
+function generateMockTransactions(start, end) {
+    const txs = [];
+    const staff = ['Sarah Stylist', 'David Director', 'Liam Senior', 'Chloe Colorist', 'Emma Junior'];
+    const types = ['Cash', 'Card', 'Wallet', 'Package'];
+    const branches = appState.branches.map(b => b.id);
+    
+    let curr = new Date(start);
+    while (curr <= end) {
+        const count = Math.floor(Math.random() * 12) + 15; // High volume
+        for (let i = 0; i < count; i++) {
+            const bId = branches[Math.floor(Math.random() * branches.length)];
+            if (appState.selectedBranch !== 'all' && bId !== appState.selectedBranch) continue;
+            
+            txs.push({
+                created_at: curr.toISOString(),
+                amount: Math.random() * 1200 + 300,
+                folio_number: `FOL-${10000 + txs.length}`,
+                staff_name: staff[Math.floor(Math.random() * staff.length)],
+                payment_type: types[Math.floor(Math.random() * types.length)],
+                branch_id: bId
+            });
+        }
+        curr.setDate(curr.getDate() + 1);
+    }
+    return txs;
+}
+
+function generateMockRecon(start, end) {
+    const logs = [];
+    const branches = appState.branches.map(b => b.id);
+    let curr = new Date(start);
+    while (curr <= end) {
+        branches.forEach(bId => {
+            if (appState.selectedBranch !== 'all' && bId !== appState.selectedBranch) return;
+            const sys = Math.random() * 12000 + 8000;
+            const variance = Math.random() > 0.9 ? (Math.random() * 100 - 50) : 0;
+            logs.push({
+                date: curr.toISOString().split('T')[0],
+                branch_id: bId,
+                cash_total: sys * 0.25,
+                card_total: sys * 0.65,
+                wallet_total: sys * 0.05,
+                package_total: sys * 0.05,
+                system_total: sys,
+                variance: variance,
+                status: variance === 0 ? 'Balanced' : (variance > 0 ? 'Over' : 'Short')
+            });
+        });
+        curr.setDate(curr.getDate() + 1);
+    }
+    return logs;
 }
 
 document.addEventListener('DOMContentLoaded', init);
